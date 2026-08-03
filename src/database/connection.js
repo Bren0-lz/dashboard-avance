@@ -1,8 +1,8 @@
-'use strict';
+"use strict";
 
-const knex = require('knex');
-const { loadEnv } = require('../config/env');
-const { makeKnexConfig } = require('../config/database');
+const knex = require("knex");
+const { loadEnv } = require("../config/env");
+const { makeKnexConfig } = require("../config/database");
 
 let instance;
 function getDatabase() {

@@ -53,16 +53,16 @@ No novo repositório não levar lógica de `pkg`, abertura de navegador, diretó
 
 ### 2.1 Navegação e páginas atuais
 
-| Rota | Função |
-|---|---|
-| `GET /` | Dashboard com KPIs, metas, ranking, filtros, timer e celebrações |
-| `GET /sellers` | CRUD de vendedoras e fotos |
-| `GET /services` | CRUD de serviços e ícones |
-| `GET /sale-types` | CRUD de tipos de venda e ícones |
-| `GET /operators` | CRUD de operadoras e ícones |
-| `GET /sales` | Lista, filtros, cadastro, edição e exclusão de vendas |
-| `GET /goals` | Lista, filtros e CRUD de metas |
-| `GET /excel` | Exportação/importação da base em workbook |
+| Rota              | Função                                                           |
+| ----------------- | ---------------------------------------------------------------- |
+| `GET /`           | Dashboard com KPIs, metas, ranking, filtros, timer e celebrações |
+| `GET /sellers`    | CRUD de vendedoras e fotos                                       |
+| `GET /services`   | CRUD de serviços e ícones                                        |
+| `GET /sale-types` | CRUD de tipos de venda e ícones                                  |
+| `GET /operators`  | CRUD de operadoras e ícones                                      |
+| `GET /sales`      | Lista, filtros, cadastro, edição e exclusão de vendas            |
+| `GET /goals`      | Lista, filtros e CRUD de metas                                   |
+| `GET /excel`      | Exportação/importação da base em workbook                        |
 
 Todos os CRUDs usam uma página-hub com aba de lista e aba de cadastro/edição, painel recolhível de filtros, tabela, feedback e ações. Não há paginação. `views/layouts/main.ejs` existe, mas não é usado; cada página inclui head/navbar/footer manualmente.
 
@@ -81,13 +81,13 @@ No destino, view controllers e API controllers devem chamar o mesmo service e o 
 
 ### 2.3 APIs existentes
 
-| Prefixo | Operações |
-|---|---|
-| `/api/sellers` | GET lista/id, POST, PUT, PATCH status, DELETE |
-| `/api/services` | Mesmo, com multipart para ícone |
-| `/api/operators` | Mesmo |
-| `/api/sales` | GET lista/id, POST, PUT, DELETE |
-| `/api/goals` | GET lista/id, POST, PUT, DELETE |
+| Prefixo           | Operações                                             |
+| ----------------- | ----------------------------------------------------- |
+| `/api/sellers`    | GET lista/id, POST, PUT, PATCH status, DELETE         |
+| `/api/services`   | Mesmo, com multipart para ícone                       |
+| `/api/operators`  | Mesmo                                                 |
+| `/api/sales`      | GET lista/id, POST, PUT, DELETE                       |
+| `/api/goals`      | GET lista/id, POST, PUT, DELETE                       |
 | `/api/sale-types` | Router existe, mas não é montado e a API não funciona |
 
 O envelope atual usa `{ok,data,message}` e devolve `error.message` interno em falhas. Não há paginação, API de dashboard nem API de períodos.
@@ -121,11 +121,11 @@ O sistema atual não tem usuário, login, sessão ou permissão; qualquer visita
 
 Papéis:
 
-| Papel | Permissões |
-|---|---|
-| `admin` | Tudo: usuários, catálogos, metas, vendas, exclusões e Excel |
+| Papel      | Permissões                                                                         |
+| ---------- | ---------------------------------------------------------------------------------- |
+| `admin`    | Tudo: usuários, catálogos, metas, vendas, exclusões e Excel                        |
 | `operator` | Dashboard/consultas e criar/editar vendas; sem usuários/import/exclusão definitiva |
-| `viewer` | Dashboard e consultas permitidas |
+| `viewer`   | Dashboard e consultas permitidas                                                   |
 
 ### 3.2 Vendedoras
 

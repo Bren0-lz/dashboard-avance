@@ -1,7 +1,7 @@
-'use strict';
+"use strict";
 
-const bcrypt = require('bcryptjs');
-const { reference } = require('./seeds/001_reference_data');
+const bcrypt = require("bcryptjs");
+const { reference } = require("./seeds/001_reference_data");
 
 async function bootstrapReferenceData(db) {
   for (const [table, rows] of Object.entries(reference)) {
@@ -13,12 +13,25 @@ async function bootstrapReferenceData(db) {
 }
 
 async function bootstrapAdmin(db, env) {
-  const countRow = await db('users').count({ count: '*' }).first();
+  const countRow = await db("users").count({ count: "*" }).first();
   if (Number(countRow.count) > 0) return false;
-  const { BOOTSTRAP_ADMIN_NAME: name, BOOTSTRAP_ADMIN_EMAIL: email, BOOTSTRAP_ADMIN_PASSWORD: password } = env;
+  const {
+    BOOTSTRAP_ADMIN_NAME: name,
+    BOOTSTRAP_ADMIN_EMAIL: email,
+    BOOTSTRAP_ADMIN_PASSWORD: password,
+  } = env;
   if (!name && !email && !password) return false;
-  if (!name || !email || !password || password.length < 12) throw new Error('Bootstrap admin exige nome, e-mail e senha com no mínimo 12 caracteres.');
-  await db('users').insert({ name, email: email.trim().toLowerCase(), password_hash: await bcrypt.hash(password, 12), role: 'admin', is_active: true });
+  if (!name || !email || !password || password.length < 12)
+    throw new Error(
+      "Bootstrap admin exige nome, e-mail e senha com no mínimo 12 caracteres.",
+    );
+  await db("users").insert({
+    name,
+    email: email.trim().toLowerCase(),
+    password_hash: await bcrypt.hash(password, 12),
+    role: "admin",
+    is_active: true,
+  });
   return true;
 }
 

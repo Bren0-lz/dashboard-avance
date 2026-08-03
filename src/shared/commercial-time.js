@@ -1,9 +1,14 @@
-'use strict';
+"use strict";
 
-const { DateTime } = require('luxon');
-const { AppError } = require('./errors');
+const { DateTime } = require("luxon");
+const { AppError } = require("./errors");
 
-const MINUTES = { morningStart: 8 * 60, morningEnd: 12 * 60, afternoonStart: 13 * 60 + 30, afternoonEnd: 17 * 60 + 30 };
+const MINUTES = {
+  morningStart: 8 * 60,
+  morningEnd: 12 * 60,
+  afternoonStart: 13 * 60 + 30,
+  afternoonEnd: 17 * 60 + 30,
+};
 
 function timeToMinutes(value) {
   const match = /^(\d{2}):(\d{2})(?::\d{2})?$/.exec(String(value));
@@ -13,13 +18,16 @@ function timeToMinutes(value) {
 
 function getSaleShift(value) {
   const minutes = timeToMinutes(value);
-  if (minutes === null) throw new AppError(422, 'INVALID_SALE_TIME', 'Horário da venda inválido.', { sale_time: 'Informe um horário válido.' });
-  return minutes < 12 * 60 ? 'morning' : 'afternoon';
+  if (minutes === null)
+    throw new AppError(422, "INVALID_SALE_TIME", "Horï¿½rio da venda invï¿½lido.", {
+      sale_time: "Informe um horï¿½rio vï¿½lido.",
+    });
+  return minutes < 12 * 60 ? "morning" : "afternoon";
 }
 
-function nowCommercial(timezone = 'America/Sao_Paulo') {
+function nowCommercial(timezone = "America/Sao_Paulo") {
   const now = DateTime.now().setZone(timezone);
-  return { date: now.toISODate(), time: now.toFormat('HH:mm') };
+  return { date: now.toISODate(), time: now.toFormat("HH:mm") };
 }
 
 module.exports = { MINUTES, timeToMinutes, getSaleShift, nowCommercial };

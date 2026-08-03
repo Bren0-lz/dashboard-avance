@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 function compareRanking(a, b) {
   const revenue = Number(b.revenue) - Number(a.revenue);
@@ -8,10 +8,16 @@ function compareRanking(a, b) {
   const firstSale = String(a.first_sale).localeCompare(String(b.first_sale));
   return firstSale || Number(a.seller_id) - Number(b.seller_id);
 }
-function sortRanking(rows) { return [...rows].sort(compareRanking); }
+function sortRanking(rows) {
+  return [...rows].sort(compareRanking);
+}
 function didOvertake(before, after, sellerId) {
-  const oldIndex = before.findIndex((row) => Number(row.seller_id) === Number(sellerId));
-  const newIndex = after.findIndex((row) => Number(row.seller_id) === Number(sellerId));
+  const oldIndex = before.findIndex(
+    (row) => Number(row.seller_id) === Number(sellerId),
+  );
+  const newIndex = after.findIndex(
+    (row) => Number(row.seller_id) === Number(sellerId),
+  );
   const previousIndex = oldIndex >= 0 ? oldIndex : before.length;
   return newIndex >= 0 && newIndex < previousIndex;
 }

@@ -72,11 +72,11 @@ Estas são as decisões recomendadas em `RECRIACAO_HOSTINGER.md`:
 
 Todas as rotas de negócio exigem sessão. Exceções: `/login`, `/health/live` e `/health/ready`.
 
-| Papel | Acesso |
-|---|---|
-| `admin` | usuários, catálogos, metas, vendas, exclusões e Excel |
-| `operator` | consultas e criação/edição de vendas |
-| `viewer` | dashboard e consultas |
+| Papel      | Acesso                                                |
+| ---------- | ----------------------------------------------------- |
+| `admin`    | usuários, catálogos, metas, vendas, exclusões e Excel |
+| `operator` | consultas e criação/edição de vendas                  |
+| `viewer`   | dashboard e consultas                                 |
 
 Sessões ficam no MySQL usando a mesma pool Knex. Cookies são `HttpOnly`, `SameSite=Lax` e `Secure` em produção. Mutações exigem token CSRF; login tem rate limit. Helmet/CSP bloqueia fontes externas e inline, erros 500 são genéricos, request IDs acompanham logs/auditoria e senha/hash/cookie/segredo são sanitizados.
 
@@ -89,7 +89,14 @@ Exclusão de vendas/metas é lógica e auditada. Catálogo referenciado é inati
 As APIs ficam em `/api/v1/{dashboard,sellers,services,operators,sale-types,sales,goals,users,excel}`. Erros seguem:
 
 ```json
-{"ok":false,"error":{"code":"VALIDATION_ERROR","message":"Revise os campos informados.","fieldErrors":{"sale_time":"Horário fora do expediente."}}}
+{
+  "ok": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Revise os campos informados.",
+    "fieldErrors": { "sale_time": "Horário fora do expediente." }
+  }
+}
 ```
 
 Listas aceitam `page` e `page_size` (máximo 100). `GET /api/v1/dashboard/events` é SSE autenticado, aceita `Last-Event-ID` e envia `sale_created`, `ranking_overtake` e `daily_goal_reached`. `/poll` é fallback. O navegador grava o último ID por versão/usuário para consumo idempotente.
@@ -111,6 +118,7 @@ Invoke-RestMethod -Method Post -Uri 'https://seu-dominio/api/v1/integration/sale
 ```
 
 Uma venda nova retorna `201`. Reenviar o mesmo `external_sale_id` com a mesma chave retorna `200` e `idempotent: true`, sem duplicar venda, auditoria ou evento. A importacao Excel limpa o ledger de idempotencia junto das vendas; apos uma restauracao, o CRM deve reenviar somente vendas ainda nao presentes.
+
 ## Excel
 
 O export contém: Vendedoras, Serviços, Operadoras, Tipos de Venda, Períodos de Meta, Metas, Vendas e Metadados. Metadados registra schema, versão, UTC e timezone. Exportações por intervalo filtram vendas e metas que cruzam o período. O round-trip automatizado cobre todas as quatro metas categóricas, origem, total e demais campos atuais.
@@ -153,7 +161,7 @@ Rollback de aplicação: redeploy do release anterior. Migrations seguem expand/
 - [ ] Banco e usuário de produção criados com privilégio mínimo.
 - [ ] Backup SQLite/uploads e checksums guardados fora do Git.
 - [ ] Dry-run legado sem divergência crítica e exceções aprovadas.
-- [x] `npm ci`, `npm run build` e `npm run test:run` verdes localmente (integra��o MySQL preparada no CI).
+- [x] `npm ci`, `npm run build` e `npm run test:run` verdes localmente (integra��o MySQL preparada no CI).
 - [ ] Migrations/seed executados duas vezes sem perda de dados.
 - [ ] Bootstrap admin removido após primeiro login.
 - [ ] Sistema antigo em somente leitura; snapshot final concluído.

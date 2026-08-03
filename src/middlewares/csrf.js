@@ -1,28 +1,47 @@
-'use strict';
+"use strict";
 
-const crypto = require('node:crypto');
-const { AppError } = require('../shared/errors');
+const crypto = require("node:crypto");
+const { AppError } = require("../shared/errors");
 
 function csrfToken(req, res, next) {
-  if (!req.session.csrfToken) req.session.csrfToken = crypto.randomBytes(32).toString('base64url');
+  if (!req.session.csrfToken)
+    req.session.csrfToken = crypto.randomBytes(32).toString("base64url");
   res.locals.csrfToken = req.session.csrfToken;
   next();
 }
 
 function csrfProtection(req, _res, next) {
-  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
-  // `req.is` é fornecido pelo Express, mas o middleware também deve aceitar
-  // requisições mínimas usadas por testes e por integrações programáticas.
-  const isMultipart = typeof req.is === 'function'
-    ? req.is('multipart/form-data')
-    : /^multipart\/form-data(?:;|$)/i.test(req.headers?.['content-type'] || '');
-  if (isMultipart && !req.body?._csrf && !req.get('x-csrf-token')) return next();
-  const supplied = req.get('x-csrf-token') || req.body?._csrf;
+  if (["GET", "HEAD", "OPTIONS"].includes(req.method)) return next();
+  // `req.is` ï¿½ fornecido pelo Express, mas o middleware tambï¿½m deve aceitar
+  // requisiï¿½ï¿½es mï¿½nimas usadas por testes e por integraï¿½ï¿½es programï¿½ticas.
+  const isMultipart =
+    typeof req.is === "function"
+      ? req.is("multipart/form-data")
+      : /^multipart\/form-data(?:;|$)/i.test(
+          req.headers?.["content-type"] || "",
+        );
+  if (isMultipart && !req.body?._csrf && !req.get("x-csrf-token"))
+    return next();
+  const supplied = req.get("x-csrf-token") || req.body?._csrf;
   const expected = req.session?.csrfToken;
-  if (!supplied || !expected) return next(new AppError(403, 'CSRF_INVALID', 'A sessÃ£o do formulÃ¡rio expirou. Atualize a pÃ¡gina.'));
+  if (!supplied || !expected)
+    return next(
+      new AppError(
+        403,
+        "CSRF_INVALID",
+        "A sessÃ£o do formulÃ¡rio expirou. Atualize a pÃ¡gina.",
+      ),
+    );
   const a = Buffer.from(String(supplied));
   const b = Buffer.from(String(expected));
-  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return next(new AppError(403, 'CSRF_INVALID', 'A sessÃ£o do formulÃ¡rio expirou. Atualize a pÃ¡gina.'));
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b))
+    return next(
+      new AppError(
+        403,
+        "CSRF_INVALID",
+        "A sessÃ£o do formulÃ¡rio expirou. Atualize a pÃ¡gina.",
+      ),
+    );
   next();
 }
 

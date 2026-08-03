@@ -30,28 +30,28 @@ Os prints de Lista de Vendas e do formulário de Metas parecem ter sido capturad
 
 O sistema possui duas linguagens visuais deliberadamente diferentes:
 
-| Contexto | Aparência | Largura | Densidade |
-|---|---|---:|---|
-| Início/dashboard | navy escuro, glass, bordas e faixas neon | quase toda a viewport | alta |
-| CRUDs e Metas | claro, branco, cinza-azulado, sombra discreta | container de 1.200 px | média |
-| Vendas | tema administrativo claro | quase toda a viewport | muito alta na tabela |
-| Banco/Excel | tema administrativo claro, cards independentes | container de 1.200 px | média |
-| Navbar e rodapé | navy escuro compartilhado | viewport inteira | baixa |
+| Contexto         | Aparência                                      |               Largura | Densidade            |
+| ---------------- | ---------------------------------------------- | --------------------: | -------------------- |
+| Início/dashboard | navy escuro, glass, bordas e faixas neon       | quase toda a viewport | alta                 |
+| CRUDs e Metas    | claro, branco, cinza-azulado, sombra discreta  | container de 1.200 px | média                |
+| Vendas           | tema administrativo claro                      | quase toda a viewport | muito alta na tabela |
+| Banco/Excel      | tema administrativo claro, cards independentes | container de 1.200 px | média                |
+| Navbar e rodapé  | navy escuro compartilhado                      |      viewport inteira | baixa                |
 
 Regra central: **não uniformizar os dois temas**. Os cards neon pertencem apenas ao dashboard; os cards brancos pertencem ao administrativo.
 
 ### 2.1 Mapa das telas
 
-| Rota/tela | Composição principal |
-|---|---|
-| Início | grade superior de KPIs, resultado de vendas, períodos e velocímetros |
-| Vendedoras | título + hub branco com abas Lista/Cadastrar |
-| Serviços | título + hub branco com abas Lista/Cadastrar |
-| Tipos de Venda | título + hub branco com abas Lista/Cadastrar |
-| Operadoras | título + hub branco com abas Lista/Cadastrar |
-| Vendas | título + hub branco largo com Lista/Cadastrar |
-| Metas | título + hub branco com Lista/Cadastrar |
-| Banco | título + dois cards lado a lado e card de orientações abaixo |
+| Rota/tela      | Composição principal                                                 |
+| -------------- | -------------------------------------------------------------------- |
+| Início         | grade superior de KPIs, resultado de vendas, períodos e velocímetros |
+| Vendedoras     | título + hub branco com abas Lista/Cadastrar                         |
+| Serviços       | título + hub branco com abas Lista/Cadastrar                         |
+| Tipos de Venda | título + hub branco com abas Lista/Cadastrar                         |
+| Operadoras     | título + hub branco com abas Lista/Cadastrar                         |
+| Vendas         | título + hub branco largo com Lista/Cadastrar                        |
+| Metas          | título + hub branco com Lista/Cadastrar                              |
+| Banco          | título + dois cards lado a lado e card de orientações abaixo         |
 
 ## 3. Arquitetura de CSS recomendada
 
@@ -154,18 +154,18 @@ Não trocar por Inter, Roboto ou uma fonte arredondada durante a recriação vis
 
 Escala administrativa:
 
-| Elemento | Tamanho | Peso | Cor |
-|---|---:|---:|---|
-| H1 da página | 32 px | 700 | #1e293b |
-| H2 de seção/card | 24 px | 700 | #1e293b |
-| Subtítulo da página | 16 px | 400 | #64748b |
-| Texto comum | 16 px | 400 | #1f2937 |
-| Label | 16 px | 600 | #64748b dentro de card |
-| Tab | 14,72 px | 800 | variável |
-| Cabeçalho de tabela | 13,12 px | 800 | #0f172a |
-| Célula de tabela | 15,2 px | 400 | #0f172a |
-| Botão pequeno | 14 px | 400–600 | branco |
-| Helper | aproximadamente 13–14 px | 400 | #64748b |
+| Elemento            |                  Tamanho |    Peso | Cor                    |
+| ------------------- | -----------------------: | ------: | ---------------------- |
+| H1 da página        |                    32 px |     700 | #1e293b                |
+| H2 de seção/card    |                    24 px |     700 | #1e293b                |
+| Subtítulo da página |                    16 px |     400 | #64748b                |
+| Texto comum         |                    16 px |     400 | #1f2937                |
+| Label               |                    16 px |     600 | #64748b dentro de card |
+| Tab                 |                 14,72 px |     800 | variável               |
+| Cabeçalho de tabela |                 13,12 px |     800 | #0f172a                |
+| Célula de tabela    |                  15,2 px |     400 | #0f172a                |
+| Botão pequeno       |                    14 px | 400–600 | branco                 |
+| Helper              | aproximadamente 13–14 px |     400 | #64748b                |
 
 Escala do dashboard:
 
@@ -530,12 +530,12 @@ Badge base:
 - line-height 1,2;
 - white-space nowrap.
 
-| Uso | Fundo | Texto |
-|---|---|---|
-| Ativo, Ativa, Com documento | rgba(34,197,94,.14) | #15803d |
+| Uso                                  | Fundo                 | Texto   |
+| ------------------------------------ | --------------------- | ------- |
+| Ativo, Ativa, Com documento          | rgba(34,197,94,.14)   | #15803d |
 | Inativo, Sem documento, Fora da base | rgba(100,116,139,.14) | #475569 |
-| Manhã, Da base | rgba(59,130,246,.14) | #1d4ed8 |
-| Tarde | rgba(245,158,11,.16) | #b45309 |
+| Manhã, Da base                       | rgba(59,130,246,.14)  | #1d4ed8 |
+| Tarde                                | rgba(245,158,11,.16)  | #b45309 |
 
 Tipos de Venda usam o badge de status maior:
 
@@ -561,13 +561,13 @@ Base:
 
 Variantes:
 
-| Ação | Cor normal | Hover |
-|---|---|---|
-| Salvar, Atualizar, Filtrar, Aplicar | #2563eb | #1d4ed8 |
-| Editar, Limpar, Cancelar, Mostrar filtros | #475569 | #334155 |
-| Ativar | #15803d | #166534 |
-| Inativar | #d97706 | #b45309 |
-| Excluir | #dc2626 | #b91c1c |
+| Ação                                      | Cor normal | Hover   |
+| ----------------------------------------- | ---------- | ------- |
+| Salvar, Atualizar, Filtrar, Aplicar       | #2563eb    | #1d4ed8 |
+| Editar, Limpar, Cancelar, Mostrar filtros | #475569    | #334155 |
+| Ativar                                    | #15803d    | #166534 |
+| Inativar                                  | #d97706    | #b45309 |
+| Excluir                                   | #dc2626    | #b91c1c |
 
 Botão pequeno:
 
@@ -677,14 +677,14 @@ Composição:
 
 Colunas, nesta ordem:
 
-| Coluna | Exibição |
-|---|---|
-| ID | número |
-| Foto | thumbnail 46 x 46 |
-| Nome da Vendedora | texto |
-| Status | badge Ativa/Inativa |
-| Data de Criação | data e hora |
-| Ações | Editar, Inativar/Ativar, Excluir |
+| Coluna            | Exibição                         |
+| ----------------- | -------------------------------- |
+| ID                | número                           |
+| Foto              | thumbnail 46 x 46                |
+| Nome da Vendedora | texto                            |
+| Status            | badge Ativa/Inativa              |
+| Data de Criação   | data e hora                      |
+| Ações             | Editar, Inativar/Ativar, Excluir |
 
 ### 8.2 Vendedoras — formulário
 
@@ -702,14 +702,14 @@ Card interno com:
 
 Colunas:
 
-| Coluna | Exibição |
-|---|---|
-| ID | número |
-| Ícone | thumbnail com contain |
-| Nome do Serviço | texto |
-| Status | Ativo/Inativo |
-| Data de Criação | data e hora |
-| Ações | Editar, Inativar/Ativar, Excluir |
+| Coluna          | Exibição                         |
+| --------------- | -------------------------------- |
+| ID              | número                           |
+| Ícone           | thumbnail com contain            |
+| Nome do Serviço | texto                            |
+| Status          | Ativo/Inativo                    |
+| Data de Criação | data e hora                      |
+| Ações           | Editar, Inativar/Ativar, Excluir |
 
 ### 8.4 Serviços — formulário
 
@@ -748,12 +748,12 @@ Formulário:
 
 Lista:
 
-| Coluna | Observação |
-|---|---|
-| Ícone | caixa 46 x 46 |
-| Tipo | nome em minúsculo conforme dado |
-| Status | badge maior com borda |
-| Ações | Editar, Inativar, Excluir |
+| Coluna | Observação                      |
+| ------ | ------------------------------- |
+| Ícone  | caixa 46 x 46                   |
+| Tipo   | nome em minúsculo conforme dado |
+| Status | badge maior com borda           |
+| Ações  | Editar, Inativar, Excluir       |
 
 Não inserir visualmente ID nem Data de Criação nessa tabela.
 
@@ -840,23 +840,23 @@ As 16 colunas são:
 Larguras mínimas práticas:
 
 | Coluna/grupo | Mínimo |
-|---|---:|
-| Vendedora | 100 px |
-| Serviço | 100 px |
-| Operadora | 100 px |
-| CNPJ | 150 px |
+| ------------ | -----: |
+| Vendedora    | 100 px |
+| Serviço      | 100 px |
+| Operadora    | 100 px |
+| CNPJ         | 150 px |
 | Razão Social | 150 px |
-| Contato | 120 px |
-| Fechou | 110 px |
-| Data | 94 px |
-| Horário | 94 px |
-| Turno | 86 px |
-| Documento | 136 px |
-| Origem | 136 px |
-| Quantidade | 58 px |
-| Unitário | 86 px |
-| Total | 86 px |
-| Ações | 146 px |
+| Contato      | 120 px |
+| Fechou       | 110 px |
+| Data         |  94 px |
+| Horário      |  94 px |
+| Turno        |  86 px |
+| Documento    | 136 px |
+| Origem       | 136 px |
+| Quantidade   |  58 px |
+| Unitário     |  86 px |
+| Total        |  86 px |
+| Ações        | 146 px |
 
 A tabela possui min-width aproximada de 1.750 px e white-space nowrap. Ações Editar/Excluir ficam lado a lado. Em viewport menor, a tabela rola dentro do card; html/body, navbar e footer não rolam lateralmente.
 
@@ -1051,12 +1051,12 @@ Bloco da meta:
 
 Estados da meta:
 
-| Estado | Regra funcional | Fundo | Borda |
-|---|---|---|---|
-| neutral | meta ausente ou zero | gray 10% | gray 30%, tracejada |
-| danger | progresso abaixo de 90% | red 14% | red 40%, tracejada |
+| Estado  | Regra funcional           | Fundo     | Borda                |
+| ------- | ------------------------- | --------- | -------------------- |
+| neutral | meta ausente ou zero      | gray 10%  | gray 30%, tracejada  |
+| danger  | progresso abaixo de 90%   | red 14%   | red 40%, tracejada   |
 | warning | de 90% até abaixo de 100% | amber 16% | amber 42%, tracejada |
-| success | 100% ou mais | green 14% | green 34%, tracejada |
+| success | 100% ou mais              | green 14% | green 34%, tracejada |
 
 Variantes:
 
@@ -1131,13 +1131,13 @@ Pizza:
 
 Cores:
 
-| Operadora | Cor |
-|---|---|
-| TIM | #2563eb |
-| Claro | #dc2626 |
-| Nio | #22c55e |
-| Vivo | #7c3aed |
-| Oi | #16a34a |
+| Operadora    | Cor     |
+| ------------ | ------- |
+| TIM          | #2563eb |
+| Claro        | #dc2626 |
+| Nio          | #22c55e |
+| Vivo         | #7c3aed |
+| Oi           | #16a34a |
 | desconhecida | #475569 |
 
 Sem vendas, mostrar estado vazio escuro centralizado, e não uma pizza vazia.
@@ -1352,13 +1352,13 @@ Caixa interna:
 
 Estados:
 
-| Período | Cor |
-|---|---|
-| Neutro/carregando | azul |
-| Manhã | amarelo |
-| Almoço | verde |
-| Tarde | rosa/magenta |
-| Encerrado | cinza |
+| Período           | Cor          |
+| ----------------- | ------------ |
+| Neutro/carregando | azul         |
+| Manhã             | amarelo      |
+| Almoço            | verde        |
+| Tarde             | rosa/magenta |
+| Encerrado         | cinza        |
 
 Definir fallback para a variável de cor do timer; não deixar custom property inexistente.
 
@@ -1421,15 +1421,15 @@ Fornecer fallbacks antes de color-mix, conic-gradient e mask para navegadores an
 
 ### 10.1 Matriz de breakpoints
 
-| Faixa | Administrativo | Dashboard |
-|---|---|---|
-| >1500 | container 1200; Vendas largo | topo 16 colunas; inferior 390 + restante |
-| 1201–1500 | igual | topo 3 colunas; showcase refluído; inferior 2 colunas iguais |
-| 1101–1200 | igual | métricas de performance 2 colunas; gauges 2 |
-| 901–1100 | igual | legenda de operadoras 2 colunas |
-| 721–900 | navbar refluída; tabelas com scroll | topo e inferior em 1 coluna; KPIs internos 1 coluna |
-| <=720 | tabs, filtros e ações empilhados | mantém regras de 900 e controles largos |
-| <=700 | padding pode cair para 16 | showcase, filtros e legenda em 1 coluna |
+| Faixa     | Administrativo                      | Dashboard                                                    |
+| --------- | ----------------------------------- | ------------------------------------------------------------ |
+| >1500     | container 1200; Vendas largo        | topo 16 colunas; inferior 390 + restante                     |
+| 1201–1500 | igual                               | topo 3 colunas; showcase refluído; inferior 2 colunas iguais |
+| 1101–1200 | igual                               | métricas de performance 2 colunas; gauges 2                  |
+| 901–1100  | igual                               | legenda de operadoras 2 colunas                              |
+| 721–900   | navbar refluída; tabelas com scroll | topo e inferior em 1 coluna; KPIs internos 1 coluna          |
+| <=720     | tabs, filtros e ações empilhados    | mantém regras de 900 e controles largos                      |
+| <=700     | padding pode cair para 16           | showcase, filtros e legenda em 1 coluna                      |
 
 ### 10.2 Correção do encaixe intermediário
 
@@ -1523,17 +1523,17 @@ Além disso:
 
 Escala recomendada:
 
-| Camada | Z-index |
-|---|---:|
-| conteúdo normal | 0 |
-| pseudo-elementos internos | 1–4 |
-| header de tabela sticky, se usado | 20 |
-| navbar sticky, somente se futuramente exigida | 100 |
-| dropdown | 200 |
-| overlay | 900 |
-| modal | 1000 |
-| toast | 1100 |
-| celebração | 1200 |
+| Camada                                        | Z-index |
+| --------------------------------------------- | ------: |
+| conteúdo normal                               |       0 |
+| pseudo-elementos internos                     |     1–4 |
+| header de tabela sticky, se usado             |      20 |
+| navbar sticky, somente se futuramente exigida |     100 |
+| dropdown                                      |     200 |
+| overlay                                       |     900 |
+| modal                                         |    1000 |
+| toast                                         |    1100 |
+| celebração                                    |    1200 |
 
 Usar isolation: isolate nos cards com pseudo-elementos. Evitar background fixo com z-index negativo atravessando stacking contexts.
 

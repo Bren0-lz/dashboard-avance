@@ -1,7 +1,7 @@
-'use strict';
+"use strict";
 
-const session = require('express-session');
-const { KnexSessionStore } = require('../modules/auth/session-store');
+const session = require("express-session");
+const { KnexSessionStore } = require("../modules/auth/session-store");
 
 function sessionMiddleware(db, env) {
   return session({
@@ -11,7 +11,12 @@ function sessionMiddleware(db, env) {
     resave: false,
     saveUninitialized: false,
     rolling: true,
-    cookie: { httpOnly: true, secure: env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 8 * 60 * 60 * 1000 }
+    cookie: {
+      httpOnly: true,
+      secure: env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 8 * 60 * 60 * 1000,
+    },
   });
 }
 

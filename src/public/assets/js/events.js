@@ -42,13 +42,28 @@ if (userId) {
   let reminderInFlightSlot = null;
   let isAudioLeader = !navigator.locks;
   let claimingAudioLeadership = false;
-  const refreshCoordinator = window.DashboardRefreshCoordinator?.createRefreshCoordinator({
-    pendingWork: () => ({ promise: soundQueue, version: soundQueueVersion }),
-    refresh: () => {
-      if (isSalesList) atualizarListaDeVendas().catch(() => window.location.reload());
-      else window.location.reload();
-    },
-  });
+  let fallbackRefreshTimer;
+  const refresh = () => {
+    if (isSalesList) atualizarListaDeVendas().catch(() => window.location.reload());
+    else window.location.reload();
+  };
+  const createRefreshCoordinator =
+    window.DashboardRefreshCoordinator?.createRefreshCoordinator;
+  const refreshCoordinator =
+    typeof createRefreshCoordinator === "function"
+      ? createRefreshCoordinator({
+          pendingWork: () => ({
+            promise: soundQueue,
+            version: soundQueueVersion,
+          }),
+          refresh,
+        })
+      : {
+          request() {
+            clearTimeout(fallbackRefreshTimer);
+            fallbackRefreshTimer = window.setTimeout(refresh, 300);
+          },
+        };
 
   const atualizarListaDeVendas = async () => {
     const response = await fetch(window.location.href, {
@@ -74,7 +89,7 @@ if (userId) {
     // Não interrompe quem está preenchendo ou editando uma venda. Na lista,
     // preservamos filtros e atualizamos somente os resultados e a paginação.
     if (!isDashboard && !isSalesList) return;
-    refreshCoordinator?.request();
+    refreshCoordinator.request();
   };
 
   const readJson = (storage, key) => {

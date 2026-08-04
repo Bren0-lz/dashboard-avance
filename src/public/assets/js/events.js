@@ -376,6 +376,11 @@ if (userId) {
     return Number(payload?.createdBy) === Number(userId);
   };
 
+  const isCurrentCommercialDate = (date) => {
+    const time = localBusinessTime();
+    return date === `${time.year}-${time.month}-${time.day}`;
+  };
+
   const claimAudioLeadership = () => {
     if (
       !isDashboard ||
@@ -424,6 +429,8 @@ if (userId) {
     if (event.type === "sale_created") atualizarDadosDaVenda();
     if (Number(payload?.saleId) === handledSaleId()) return;
     if (originatedByActiveLocalFlow(payload)) return;
+    if (event.type === "sale_created" && !isCurrentCommercialDate(payload?.date))
+      return;
     if (event.type === "ranking_overtake" && !isDashboard) return;
     if (!isAudioLeader) return;
     const globallyPlayedId = Number(localStorage.getItem(playedEventKey) || 0);

@@ -29,6 +29,10 @@ if (form) {
       style: "currency",
       currency: "BRL",
     }).format(amount || 0);
+  const currentCommercialDate = () =>
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Sao_Paulo",
+    }).format();
   const calculate = () => {
     const value = parseBrazilianMoney(unit.value);
     total.value = formatBrazilianMoney(
@@ -148,9 +152,14 @@ if (form) {
         );
       else sessionStorage.removeItem("avance.pending-dashboard-sounds.v1");
 
+      const finish = () => window.location.assign("/");
+      if (form.querySelector("#sale-date").value !== currentCommercialDate()) {
+        submitButton.textContent = "Venda registrada";
+        return finish();
+      }
+
       await unlockPromise;
       submitButton.textContent = "Tocando venda...";
-      const finish = () => window.location.assign("/");
       const played = await audioApi.play("sale_created").catch(() => false);
       if (played) return finish();
 

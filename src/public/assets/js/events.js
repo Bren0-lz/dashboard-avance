@@ -37,11 +37,18 @@ if (userId) {
   let soundsEnabled = false;
   let unlockPromise;
   let soundQueue = Promise.resolve();
+  let soundQueueVersion = 0;
   let drainingPending = false;
   let reminderInFlightSlot = null;
   let isAudioLeader = !navigator.locks;
   let claimingAudioLeadership = false;
-  let refreshTimer = null;
+  const refreshCoordinator = window.DashboardRefreshCoordinator?.createRefreshCoordinator({
+    pendingWork: () => ({ promise: soundQueue, version: soundQueueVersion }),
+    refresh: () => {
+      if (isSalesList) atualizarListaDeVendas().catch(() => window.location.reload());
+      else window.location.reload();
+    },
+  });
 
   const atualizarListaDeVendas = async () => {
     const response = await fetch(window.location.href, {
@@ -66,19 +73,8 @@ if (userId) {
   const atualizarDadosDaVenda = () => {
     // Não interrompe quem está preenchendo ou editando uma venda. Na lista,
     // preservamos filtros e atualizamos somente os resultados e a paginação.
-    if ((!isDashboard && !isSalesList) || refreshTimer) return;
-    refreshTimer = window.setTimeout(async () => {
-      try {
-        if (isSalesList) await atualizarListaDeVendas();
-        else window.location.reload();
-      } catch {
-        // Em caso de sessão expirada ou resposta inesperada, a recarga normal
-        // preserva o comportamento já esperado pelo navegador.
-        window.location.reload();
-      } finally {
-        refreshTimer = null;
-      }
-    }, 300);
+    if (!isDashboard && !isSalesList) return;
+    refreshCoordinator?.request();
   };
 
   const readJson = (storage, key) => {
@@ -240,6 +236,7 @@ if (userId) {
       () => undefined,
       () => undefined,
     );
+    soundQueueVersion += 1;
     return task;
   };
 

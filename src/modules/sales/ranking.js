@@ -22,4 +22,14 @@ function didOvertake(before, after, sellerId) {
   return newIndex >= 0 && newIndex < previousIndex;
 }
 
-module.exports = { compareRanking, sortRanking, didOvertake };
+function didTakeLead(before, after, sellerId) {
+  const previousLeader = before[0];
+  const currentLeader = after[0];
+  return (
+    Boolean(previousLeader && currentLeader) &&
+    Number(previousLeader.seller_id) !== Number(sellerId) &&
+    Number(currentLeader.seller_id) === Number(sellerId)
+  );
+}
+
+module.exports = { compareRanking, sortRanking, didOvertake, didTakeLead };

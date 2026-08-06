@@ -436,6 +436,10 @@ if (userId) {
     const globallyPlayedId = Number(localStorage.getItem(playedEventKey) || 0);
     if (id <= globallyPlayedId) return;
     localStorage.setItem(playedEventKey, String(id));
+    if (event.type === "ranking_overtake" && !payload?.leaderTakeover) {
+      celebrate(event.type);
+      return;
+    }
     queueSound(
       event.type,
       event.type === "sale_created" ? null : () => celebrate(event.type),
@@ -445,13 +449,17 @@ if (userId) {
   const drainPendingDashboardSounds = async () => {
     if (!isDashboard || drainingPending) return;
     const pending = readJson(sessionStorage, pendingKey);
-    if (!pending?.sounds?.length) return;
+    if (!pending?.sounds?.length && !pending?.celebrations?.length) return;
     drainingPending = true;
     try {
       if (!pending.celebrated) {
-        for (const type of pending.sounds) celebrate(type);
+        for (const type of pending.celebrations || []) celebrate(type);
         pending.celebrated = true;
         sessionStorage.setItem(pendingKey, JSON.stringify(pending));
+      }
+      if (!pending.sounds?.length) {
+        sessionStorage.removeItem(pendingKey);
+        return;
       }
       await unlockAudio();
       while (pending.sounds.length) {

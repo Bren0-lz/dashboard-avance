@@ -139,16 +139,22 @@ if (form) {
         JSON.stringify({ startedAt: Date.now(), saleId }),
       );
       const sounds = [];
-      if (json.events?.rankingOvertake) sounds.push("ranking_overtake");
-      if (json.events?.dailyGoalReached) sounds.push("daily_goal_reached");
+      const celebrations = [];
+      if (json.events?.rankingOvertake) celebrations.push("ranking_overtake");
+      if (json.events?.rankingLeaderTakeover)
+        sounds.push("ranking_overtake");
+      if (json.events?.dailyGoalReached) {
+        sounds.push("daily_goal_reached");
+        celebrations.push("daily_goal_reached");
+      }
       sessionStorage.setItem(
         "avance.handled-sale.v1",
         JSON.stringify({ saleId, createdAt: Date.now() }),
       );
-      if (sounds.length)
+      if (sounds.length || celebrations.length)
         sessionStorage.setItem(
           "avance.pending-dashboard-sounds.v1",
-          JSON.stringify({ saleId, sounds }),
+          JSON.stringify({ saleId, sounds, celebrations }),
         );
       else sessionStorage.removeItem("avance.pending-dashboard-sounds.v1");
 

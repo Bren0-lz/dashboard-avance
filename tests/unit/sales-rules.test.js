@@ -5,7 +5,11 @@ const assert = require("node:assert/strict");
 const { getSaleShift } = require("../../src/shared/commercial-time");
 const { isValidCnpj } = require("../../src/shared/cnpj");
 const { calculateTotal } = require("../../src/shared/money");
-const { sortRanking, didOvertake } = require("../../src/modules/sales/ranking");
+const {
+  sortRanking,
+  didOvertake,
+  didTakeLead,
+} = require("../../src/modules/sales/ranking");
 
 for (const [time, expected] of [
   ["00:00", "morning"],
@@ -49,4 +53,17 @@ test("nova vendedora ultrapassa quando entra acima da última posição anterior
     true,
   );
   assert.equal(didOvertake(before, [...before, { seller_id: 4 }], 4), false);
+});
+test("tomada da liderança exige superar uma líder existente", () => {
+  const before = [{ seller_id: 1 }, { seller_id: 2 }, { seller_id: 3 }];
+  assert.equal(
+    didTakeLead(before, [{ seller_id: 2 }, { seller_id: 1 }, { seller_id: 3 }], 2),
+    true,
+  );
+  assert.equal(
+    didTakeLead(before, [{ seller_id: 1 }, { seller_id: 3 }, { seller_id: 2 }], 3),
+    false,
+  );
+  assert.equal(didTakeLead(before, [{ seller_id: 1 }, { seller_id: 2 }], 1), false);
+  assert.equal(didTakeLead([], [{ seller_id: 1 }], 1), false);
 });

@@ -3,7 +3,7 @@
 const { AppError } = require("../../shared/errors");
 const { getSaleShift } = require("../../shared/commercial-time");
 const { calculateTotal } = require("../../shared/money");
-const { sortRanking, didOvertake } = require("./ranking");
+const { sortRanking, didOvertake, didTakeLead } = require("./ranking");
 
 const fkDefinitions = [
   ["seller_id", "sellers"],
@@ -242,6 +242,7 @@ async function mutateSaleInTransaction(trx, { operation, id, input, userId }) {
   const eventResult = {
     saleCreated: operation === "create",
     rankingOvertake: false,
+    rankingLeaderTakeover: false,
     dailyGoalReached: false,
   };
   if (operation === "create")
@@ -254,11 +255,18 @@ async function mutateSaleInTransaction(trx, { operation, id, input, userId }) {
     for (const date of dates) {
       const after = await rankingSnapshot(trx, date);
       if (didOvertake(beforeRankings.get(date), after, sellerId)) {
+        const leaderTakeover = didTakeLead(
+          beforeRankings.get(date),
+          after,
+          sellerId,
+        );
         eventResult.rankingOvertake = true;
+        eventResult.rankingLeaderTakeover ||= leaderTakeover;
         await emit(trx, "ranking_overtake", {
           saleId,
           date,
           sellerId,
+          leaderTakeover,
           createdBy: userId,
         });
       }

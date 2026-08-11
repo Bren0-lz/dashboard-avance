@@ -121,7 +121,7 @@ Uma venda nova retorna `201`. Reenviar o mesmo `external_sale_id` com a mesma ch
 
 ## Excel
 
-O export contém: Vendedoras, Serviços, Operadoras, Tipos de Venda, Períodos de Meta, Metas, Vendas e Metadados. Metadados registra schema, versão, UTC e timezone. Exportações por intervalo filtram vendas e metas que cruzam o período. O round-trip automatizado cobre todas as quatro metas categóricas, origem, total e demais campos atuais.
+O export usa o schema 3, com cabeçalhos em português, e contém: Vendedoras, Serviços, Operadoras, Tipos de Venda, Períodos de Meta, Metas, Metas Excluídas, Vendas, Vendas Excluídas e Metadados. Registros ativos e excluídos ficam em abas separadas, inclusive nas exportações por intervalo. A importação restaura esse histórico sem reativá-lo e continua aceitando backups antigos com registros misturados nas abas principais ou cabeçalhos técnicos. Metadados registra schema, versão, UTC e timezone. O round-trip automatizado cobre todas as quatro metas categóricas, origem, total e demais campos atuais.
 
 ## Migração SQLite → MySQL
 

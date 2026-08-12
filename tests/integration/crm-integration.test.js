@@ -217,7 +217,7 @@ test(
               .first()
           ).count,
         ),
-        0,
+        1,
       );
       assert.ok(
         await db("sales")
@@ -247,6 +247,25 @@ test(
         .set("Authorization", `Bearer ${created.apiKey}`);
       assert.equal(repeatedRemoval.status, 200, repeatedRemoval.text);
       assert.equal(repeatedRemoval.body.data.deleted, false);
+
+      const restored = await request(app)
+        .post("/api/v1/integration/sales")
+        .set("Authorization", `Bearer ${created.apiKey}`)
+        .send(payload);
+      assert.equal(restored.status, 200, restored.text);
+      assert.equal(restored.body.updated, true);
+      assert.equal(restored.body.events, undefined);
+      assert.equal(
+        Number(
+          (
+            await db("dashboard_events")
+              .where("payload", "like", `%\"saleId\":${saleId}%`)
+              .count({ count: "*" })
+              .first()
+          ).count,
+        ),
+        eventsBeforeUpdate,
+      );
 
       await keys.revokeApiKey(db, keyId, adminId);
       const revoked = await request(app)

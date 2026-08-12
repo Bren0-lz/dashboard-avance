@@ -73,7 +73,25 @@ async function syncSale(
         .where({ api_key_id: apiKeyId, external_sale_id: externalSaleId })
         .first();
       if (existing) {
-        const current = await sales.getSale(trx, existing.sale_id);
+        const current = await trx("sales")
+          .where({ id: existing.sale_id })
+          .first();
+        if (current?.deleted_at) {
+          const result = await sales.mutateSaleInTransaction(trx, {
+            operation: "restore",
+            id: existing.sale_id,
+            input,
+            userId: null,
+            emitEvents: false,
+          });
+          return {
+            id: result.id,
+            idempotent: false,
+            updated: true,
+            events: null,
+            before: result.before,
+          };
+        }
         if (sameSale(current, input))
           return {
             id: Number(existing.sale_id),
@@ -147,7 +165,6 @@ async function deleteSale(db, { apiKeyId, externalSaleId }) {
       .where({ id: receipt.sale_id })
       .whereNull("deleted_at")
       .first();
-    await trx("external_sale_receipts").where({ id: receipt.id }).delete();
     if (!sale)
       return { deleted: false, id: Number(receipt.sale_id), before: null };
 

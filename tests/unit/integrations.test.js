@@ -10,6 +10,7 @@ const {
   requireIntegrationApiKey,
 } = require("../../src/middlewares/api-key-auth");
 const {
+  createSale,
   sameSale,
   updateSale,
 } = require("../../src/modules/integrations/integration.service");
@@ -96,6 +97,41 @@ test("PUT cria linha adicionada em edição sem emitir eventos", async () => {
       input,
     });
     assert.equal(receivedOptions.operation, "create");
+    assert.equal(receivedOptions.emitEvents, false);
+    assert.equal(result.events, null);
+    assert.equal(result.updated, true);
+  } finally {
+    salesService.mutateSaleInTransaction = originalMutation;
+  }
+});
+
+test("DELETE seguido de POST restaura a venda sem confete ou eventos", async () => {
+  const originalMutation = salesService.mutateSaleInTransaction;
+  let receivedOptions;
+  salesService.mutateSaleInTransaction = async (_trx, options) => {
+    receivedOptions = options;
+    return { id: 77, before: { id: 77, deleted_at: new Date() } };
+  };
+  const trx = (table) => ({
+    where() {
+      return this;
+    },
+    async first() {
+      return table === "external_sale_receipts"
+        ? { sale_id: 77 }
+        : { id: 77, deleted_at: new Date() };
+    },
+  });
+  const db = { transaction: async (callback) => callback(trx) };
+  const parsed = parse(integrationSaleSchema, sale);
+  const { external_sale_id: externalSaleId, ...input } = parsed;
+  try {
+    const result = await createSale(db, {
+      apiKeyId: 1,
+      externalSaleId,
+      input,
+    });
+    assert.equal(receivedOptions.operation, "restore");
     assert.equal(receivedOptions.emitEvents, false);
     assert.equal(result.events, null);
     assert.equal(result.updated, true);

@@ -205,7 +205,13 @@ async function mutateSaleInTransaction(
   trx,
   { operation, id, input, userId, emitEvents = true },
 ) {
-  const current = id ? await getSale(trx, id) : null;
+  const current = id
+    ? operation === "restore"
+      ? await trx("sales").where({ id }).first()
+      : await getSale(trx, id)
+    : null;
+  if (operation === "restore" && !current)
+    throw new AppError(404, "SALE_NOT_FOUND", "Venda não encontrada.");
   if (operation !== "delete") await validateReferences(trx, input, current);
   const dates = [
     ...new Set([current?.sale_date, input?.sale_date].filter(Boolean)),
@@ -228,11 +234,14 @@ async function mutateSaleInTransaction(
   let saleId = id;
   if (operation === "create") {
     [saleId] = await trx("sales").insert(saleData(input, userId));
-  } else if (operation === "update")
+  } else if (operation === "update" || operation === "restore")
     await trx("sales")
       .where({ id })
       .update({
         ...saleData(input, userId, current),
+        ...(operation === "restore"
+          ? { deleted_at: null, deleted_by: null }
+          : {}),
         updated_at: trx.fn.now(),
       });
   else

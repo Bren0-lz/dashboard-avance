@@ -126,6 +126,35 @@ test(
         ),
         eventsBeforeUpdate,
       );
+      const putPayload = {
+        ...editedPayload,
+        company_name: "Empresa CI Editada via PUT",
+      };
+      delete putPayload.external_sale_id;
+      const putUpdate = await request(app)
+        .put(
+          `/api/v1/integration/sales/${encodeURIComponent(payload.external_sale_id)}`,
+        )
+        .set("Authorization", `Bearer ${created.apiKey}`)
+        .send(putPayload);
+      assert.equal(putUpdate.status, 200, putUpdate.text);
+      assert.equal(putUpdate.body.updated, true);
+      assert.equal(putUpdate.body.events, undefined);
+      assert.equal(
+        (await db("sales").where({ id: saleId }).first()).company_name,
+        putPayload.company_name,
+      );
+      assert.equal(
+        Number(
+          (
+            await db("dashboard_events")
+              .where("payload", "like", `%\"saleId\":${saleId}%`)
+              .count({ count: "*" })
+              .first()
+          ).count,
+        ),
+        eventsBeforeUpdate,
+      );
       assert.equal(
         Number(
           (

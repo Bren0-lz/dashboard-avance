@@ -11,7 +11,9 @@ const {
 } = require("../../src/middlewares/api-key-auth");
 const {
   sameSale,
+  updateSale,
 } = require("../../src/modules/integrations/integration.service");
+const salesService = require("../../src/modules/sales/sales.service");
 
 const sale = {
   external_sale_id: "crm-123",
@@ -62,6 +64,44 @@ test("integração distingue reenvio idempotente de edição", () => {
     sameSale(current, { ...input, company_name: "Empresa editada" }),
     false,
   );
+});
+
+test("PUT cria linha adicionada em edição sem emitir eventos", async () => {
+  const originalMutation = salesService.mutateSaleInTransaction;
+  let receivedOptions;
+  salesService.mutateSaleInTransaction = async (_trx, options) => {
+    receivedOptions = options;
+    return { id: 77, events: { saleCreated: true } };
+  };
+  const trx = (table) => {
+    if (table !== "external_sale_receipts")
+      throw new Error(`Tabela inesperada: ${table}`);
+    return {
+      where() {
+        return this;
+      },
+      async first() {
+        return null;
+      },
+      async insert() {},
+    };
+  };
+  const db = { transaction: async (callback) => callback(trx) };
+  const parsed = parse(integrationSaleSchema, sale);
+  const { external_sale_id: externalSaleId, ...input } = parsed;
+  try {
+    const result = await updateSale(db, {
+      apiKeyId: 1,
+      externalSaleId,
+      input,
+    });
+    assert.equal(receivedOptions.operation, "create");
+    assert.equal(receivedOptions.emitEvents, false);
+    assert.equal(result.events, null);
+    assert.equal(result.updated, true);
+  } finally {
+    salesService.mutateSaleInTransaction = originalMutation;
+  }
 });
 
 test("middleware de integração rejeita Bearer ausente antes de acessar banco", async () => {

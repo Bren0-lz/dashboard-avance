@@ -119,6 +119,8 @@ Invoke-RestMethod -Method Post -Uri 'https://seu-dominio/api/v1/integration/sale
 
 Uma venda nova retorna `201`. Reenviar o mesmo `external_sale_id` com dados alterados atualiza a venda existente e retorna `200` com `updated: true`, sem emitir eventos ou sons de nova venda. Reenviar os mesmos dados retorna `200` e `idempotent: true`, sem duplicar venda, auditoria ou evento. A importacao Excel limpa o ledger de idempotencia junto das vendas; apos uma restauracao, o CRM deve reenviar somente vendas ainda nao presentes.
 
+Para sincronizar uma edição, envie os dados da venda com `PUT /api/v1/integration/sales/{external_sale_id}`. Esse endpoint atualiza o lançamento existente ou o cria silenciosamente quando a edição adiciona uma nova linha, sem emitir eventos de venda, ultrapassagem ou meta.
+
 ## Excel
 
 O export usa o schema 3, com cabeçalhos em português, e contém: Vendedoras, Serviços, Operadoras, Tipos de Venda, Períodos de Meta, Metas, Metas Excluídas, Vendas, Vendas Excluídas e Metadados. Registros ativos e excluídos ficam em abas separadas, inclusive nas exportações por intervalo. A importação restaura esse histórico sem reativá-lo e continua aceitando backups antigos com registros misturados nas abas principais ou cabeçalhos técnicos. Metadados registra schema, versão, UTC e timezone. O round-trip automatizado cobre todas as quatro metas categóricas, origem, total e demais campos atuais.

@@ -63,7 +63,10 @@ async function listReferences(db) {
   ]);
   return { sellers, services, operators, sale_types: saleTypes };
 }
-async function createSale(db, { apiKeyId, externalSaleId, input }) {
+async function syncSale(
+  db,
+  { apiKeyId, externalSaleId, input, emitOnCreate },
+) {
   try {
     return await db.transaction(async (trx) => {
       const existing = await trx("external_sale_receipts")
@@ -96,6 +99,7 @@ async function createSale(db, { apiKeyId, externalSaleId, input }) {
         operation: "create",
         input,
         userId: null,
+        emitEvents: emitOnCreate,
       });
       await trx("external_sale_receipts").insert({
         api_key_id: apiKeyId,
@@ -123,6 +127,15 @@ async function createSale(db, { apiKeyId, externalSaleId, input }) {
     };
   }
 }
+
+async function createSale(db, options) {
+  return syncSale(db, { ...options, emitOnCreate: true });
+}
+
+async function updateSale(db, options) {
+  const result = await syncSale(db, { ...options, emitOnCreate: false });
+  return { ...result, updated: true, events: null };
+}
 async function deleteSale(db, { apiKeyId, externalSaleId }) {
   return db.transaction(async (trx) => {
     const receipt = await trx("external_sale_receipts")
@@ -146,4 +159,10 @@ async function deleteSale(db, { apiKeyId, externalSaleId }) {
     return { deleted: true, id: result.id, before: result.before };
   });
 }
-module.exports = { listReferences, createSale, deleteSale, sameSale };
+module.exports = {
+  listReferences,
+  createSale,
+  updateSale,
+  deleteSale,
+  sameSale,
+};

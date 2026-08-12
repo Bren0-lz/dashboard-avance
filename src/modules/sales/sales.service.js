@@ -201,7 +201,10 @@ async function emit(db, type, payload) {
   });
 }
 
-async function mutateSaleInTransaction(trx, { operation, id, input, userId }) {
+async function mutateSaleInTransaction(
+  trx,
+  { operation, id, input, userId, emitEvents = true },
+) {
   const current = id ? await getSale(trx, id) : null;
   if (operation !== "delete") await validateReferences(trx, input, current);
   const dates = [
@@ -213,7 +216,7 @@ async function mutateSaleInTransaction(trx, { operation, id, input, userId }) {
   const targetDate = input?.sale_date || current.sale_date;
   const sellerId = input?.seller_id || current.seller_id;
   const goals =
-    operation === "create"
+    operation === "create" && emitEvents
       ? await applicableDailyGoals(trx, targetDate, sellerId)
       : [];
   const realizedBefore = new Map();
@@ -240,18 +243,18 @@ async function mutateSaleInTransaction(trx, { operation, id, input, userId }) {
       updated_by: userId,
     });
   const eventResult = {
-    saleCreated: operation === "create",
+    saleCreated: operation === "create" && emitEvents,
     rankingOvertake: false,
     rankingLeaderTakeover: false,
     dailyGoalReached: false,
   };
-  if (operation === "create")
+  if (operation === "create" && emitEvents)
     await emit(trx, "sale_created", {
       saleId,
       date: targetDate,
       createdBy: userId,
     });
-  if (operation === "create")
+  if (operation === "create" && emitEvents)
     for (const date of dates) {
       const after = await rankingSnapshot(trx, date);
       if (didOvertake(beforeRankings.get(date), after, sellerId)) {
@@ -271,7 +274,7 @@ async function mutateSaleInTransaction(trx, { operation, id, input, userId }) {
         });
       }
     }
-  if (operation === "create" && goals.length) {
+  if (operation === "create" && emitEvents && goals.length) {
     const reachedGoalIds = [];
     for (const goal of goals) {
       const realizedAfter = await realizedForGoal(

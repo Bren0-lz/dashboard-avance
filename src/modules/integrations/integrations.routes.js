@@ -114,19 +114,23 @@ function integrationApiRouter({ db }) {
       });
       if (!result.idempotent)
         await audit(db, req, {
-          action: "integration.sale.create",
+          action: result.updated
+            ? "integration.sale.update"
+            : "integration.sale.create",
           entityType: "sale",
           entityId: result.id,
+          ...(result.updated ? { before: result.before } : {}),
           after: {
             ...input,
             external_sale_id: externalSaleId,
             api_key_id: req.integration.apiKey.id,
           },
         });
-      res.status(result.idempotent ? 200 : 201).json({
+      res.status(result.idempotent || result.updated ? 200 : 201).json({
         ok: true,
         data: { id: result.id, external_sale_id: externalSaleId },
         idempotent: result.idempotent,
+        updated: result.updated,
         ...(result.events ? { events: result.events } : {}),
       });
     } catch (error) {

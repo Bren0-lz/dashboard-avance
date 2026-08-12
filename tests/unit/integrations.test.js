@@ -9,6 +9,9 @@ const { parse } = require("../../src/shared/validation");
 const {
   requireIntegrationApiKey,
 } = require("../../src/middlewares/api-key-auth");
+const {
+  sameSale,
+} = require("../../src/modules/integrations/integration.service");
 
 const sale = {
   external_sale_id: "crm-123",
@@ -42,6 +45,22 @@ test("venda de integração aceita observação nula", () => {
   assert.equal(
     parse(integrationSaleSchema, { ...sale, notes: null }).notes,
     null,
+  );
+});
+
+test("integração distingue reenvio idempotente de edição", () => {
+  const parsed = parse(integrationSaleSchema, sale);
+  const { external_sale_id: _externalSaleId, ...input } = parsed;
+  const current = {
+    ...input,
+    cnpj_digits: input.cnpj,
+    sale_time: "14:30:00",
+    total_value: "99.90",
+  };
+  assert.equal(sameSale(current, input), true);
+  assert.equal(
+    sameSale(current, { ...input, company_name: "Empresa editada" }),
+    false,
   );
 });
 

@@ -93,6 +93,39 @@ test(
       assert.equal(duplicate.status, 200, duplicate.text);
       assert.equal(duplicate.body.idempotent, true);
       assert.equal(duplicate.body.data.id, saleId);
+      const eventsBeforeUpdate = Number(
+        (
+          await db("dashboard_events")
+            .where("payload", "like", `%\"saleId\":${saleId}%`)
+            .count({ count: "*" })
+            .first()
+        ).count,
+      );
+      const editedPayload = { ...payload, company_name: "Empresa CI Editada" };
+      const edited = await request(app)
+        .post("/api/v1/integration/sales")
+        .set("Authorization", `Bearer ${created.apiKey}`)
+        .send(editedPayload);
+      assert.equal(edited.status, 200, edited.text);
+      assert.equal(edited.body.idempotent, false);
+      assert.equal(edited.body.updated, true);
+      assert.equal(edited.body.data.id, saleId);
+      assert.equal(edited.body.events, undefined);
+      assert.equal(
+        (await db("sales").where({ id: saleId }).first()).company_name,
+        editedPayload.company_name,
+      );
+      assert.equal(
+        Number(
+          (
+            await db("dashboard_events")
+              .where("payload", "like", `%\"saleId\":${saleId}%`)
+              .count({ count: "*" })
+              .first()
+          ).count,
+        ),
+        eventsBeforeUpdate,
+      );
       assert.equal(
         Number(
           (
@@ -100,6 +133,20 @@ test(
               .where({
                 api_key_id: keyId,
                 external_sale_id: payload.external_sale_id,
+              })
+              .count({ count: "*" })
+              .first()
+          ).count,
+        ),
+        1,
+      );
+      assert.equal(
+        Number(
+          (
+            await db("audit_logs")
+              .where({
+                action: "integration.sale.update",
+                entity_id: String(saleId),
               })
               .count({ count: "*" })
               .first()

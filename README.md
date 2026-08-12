@@ -117,7 +117,7 @@ $body = @{ external_sale_id = 'crm-sale-12345'; seller_id = 1; service_id = 2; o
 Invoke-RestMethod -Method Post -Uri 'https://seu-dominio/api/v1/integration/sales' -Headers $headers -ContentType 'application/json' -Body $body
 ```
 
-Uma venda nova retorna `201`. Reenviar o mesmo `external_sale_id` com a mesma chave retorna `200` e `idempotent: true`, sem duplicar venda, auditoria ou evento. A importacao Excel limpa o ledger de idempotencia junto das vendas; apos uma restauracao, o CRM deve reenviar somente vendas ainda nao presentes.
+Uma venda nova retorna `201`. Reenviar o mesmo `external_sale_id` com dados alterados atualiza a venda existente e retorna `200` com `updated: true`, sem emitir eventos ou sons de nova venda. Reenviar os mesmos dados retorna `200` e `idempotent: true`, sem duplicar venda, auditoria ou evento. A importacao Excel limpa o ledger de idempotencia junto das vendas; apos uma restauracao, o CRM deve reenviar somente vendas ainda nao presentes.
 
 ## Excel
 

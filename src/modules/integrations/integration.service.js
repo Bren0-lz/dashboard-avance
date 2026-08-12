@@ -1,5 +1,47 @@
 "use strict";
 const sales = require("../sales/sales.service");
+
+const syncedSaleColumns = [
+  "seller_id",
+  "service_id",
+  "operator_id",
+  "sale_type_id",
+  "sale_date",
+  "sale_time",
+  "cnpj_digits",
+  "company_name",
+  "phone",
+  "closed_by_name",
+  "quantity",
+  "unit_value",
+  "total_value",
+  "has_doc",
+  "is_base_sale",
+  "notes",
+];
+
+function sameSale(current, input) {
+  const expected = sales.saleData(input, null, current);
+  return syncedSaleColumns.every((column) => {
+    const currentValue = current[column];
+    const expectedValue = expected[column];
+    if (currentValue == null || expectedValue == null)
+      return currentValue == null && expectedValue == null;
+    if (
+      [
+        "seller_id",
+        "service_id",
+        "operator_id",
+        "sale_type_id",
+        "quantity",
+      ].includes(column)
+    )
+      return Number(currentValue) === Number(expectedValue);
+    if (["has_doc", "is_base_sale"].includes(column))
+      return Boolean(currentValue) === Boolean(expectedValue);
+    return String(currentValue) === String(expectedValue);
+  });
+}
 async function listReferences(db) {
   const [sellers, services, operators, saleTypes] = await Promise.all([
     db("sellers")
@@ -27,8 +69,29 @@ async function createSale(db, { apiKeyId, externalSaleId, input }) {
       const existing = await trx("external_sale_receipts")
         .where({ api_key_id: apiKeyId, external_sale_id: externalSaleId })
         .first();
-      if (existing)
-        return { id: Number(existing.sale_id), idempotent: true, events: null };
+      if (existing) {
+        const current = await sales.getSale(trx, existing.sale_id);
+        if (sameSale(current, input))
+          return {
+            id: Number(existing.sale_id),
+            idempotent: true,
+            updated: false,
+            events: null,
+          };
+        const result = await sales.mutateSaleInTransaction(trx, {
+          operation: "update",
+          id: existing.sale_id,
+          input,
+          userId: null,
+        });
+        return {
+          id: result.id,
+          idempotent: false,
+          updated: true,
+          events: null,
+          before: result.before,
+        };
+      }
       const result = await sales.mutateSaleInTransaction(trx, {
         operation: "create",
         input,
@@ -39,7 +102,12 @@ async function createSale(db, { apiKeyId, externalSaleId, input }) {
         external_sale_id: externalSaleId,
         sale_id: result.id,
       });
-      return { id: result.id, idempotent: false, events: result.events };
+      return {
+        id: result.id,
+        idempotent: false,
+        updated: false,
+        events: result.events,
+      };
     });
   } catch (error) {
     if (error.code !== "ER_DUP_ENTRY") throw error;
@@ -47,7 +115,12 @@ async function createSale(db, { apiKeyId, externalSaleId, input }) {
       .where({ api_key_id: apiKeyId, external_sale_id: externalSaleId })
       .first();
     if (!existing) throw error;
-    return { id: Number(existing.sale_id), idempotent: true, events: null };
+    return {
+      id: Number(existing.sale_id),
+      idempotent: true,
+      updated: false,
+      events: null,
+    };
   }
 }
 async function deleteSale(db, { apiKeyId, externalSaleId }) {
@@ -73,4 +146,4 @@ async function deleteSale(db, { apiKeyId, externalSaleId }) {
     return { deleted: true, id: result.id, before: result.before };
   });
 }
-module.exports = { listReferences, createSale, deleteSale };
+module.exports = { listReferences, createSale, deleteSale, sameSale };

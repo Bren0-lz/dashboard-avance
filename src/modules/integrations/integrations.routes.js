@@ -114,20 +114,61 @@ function integrationApiRouter({ db }) {
       });
       if (!result.idempotent)
         await audit(db, req, {
-          action: "integration.sale.create",
+          action: result.updated
+            ? "integration.sale.update"
+            : "integration.sale.create",
           entityType: "sale",
           entityId: result.id,
+          ...(result.updated ? { before: result.before } : {}),
           after: {
             ...input,
             external_sale_id: externalSaleId,
             api_key_id: req.integration.apiKey.id,
           },
         });
-      res.status(result.idempotent ? 200 : 201).json({
+      res.status(result.idempotent || result.updated ? 200 : 201).json({
         ok: true,
         data: { id: result.id, external_sale_id: externalSaleId },
         idempotent: result.idempotent,
+        updated: result.updated,
         ...(result.events ? { events: result.events } : {}),
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+  router.put("/sales/:external_sale_id", async (req, res, next) => {
+    try {
+      const { external_sale_id: externalSaleId } = parse(
+        integrationExternalSaleIdSchema,
+        req.params,
+      );
+      const input = parse(
+        integrationSaleSchema.omit({ external_sale_id: true }),
+        req.body,
+      );
+      const result = await integration.updateSale(db, {
+        apiKeyId: req.integration.apiKey.id,
+        externalSaleId,
+        input,
+      });
+      if (!result.idempotent)
+        await audit(db, req, {
+          action: "integration.sale.update",
+          entityType: "sale",
+          entityId: result.id,
+          ...(result.before ? { before: result.before } : {}),
+          after: {
+            ...input,
+            external_sale_id: externalSaleId,
+            api_key_id: req.integration.apiKey.id,
+          },
+        });
+      res.json({
+        ok: true,
+        data: { id: result.id, external_sale_id: externalSaleId },
+        idempotent: result.idempotent,
+        updated: true,
       });
     } catch (error) {
       next(error);

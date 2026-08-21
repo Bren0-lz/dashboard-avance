@@ -106,12 +106,23 @@ async function availableCode(db, table, value) {
   );
 }
 async function create(db, key, input, file, userId) {
-  const def = definition(key),
-    mediaId = await media.saveImage(db, file, def.mediaKind, userId),
+  const def = definition(key);
+  if (key === "sellers" && input.id) {
+    const existingId = await db(def.table).where({ id: input.id }).first();
+    if (existingId)
+      throw new AppError(
+        409,
+        "SELLER_ID_CONFLICT",
+        "Já existe uma vendedora com este ID.",
+        { id: "Escolha outro ID para a vendedora." },
+      );
+  }
+  const mediaId = await media.saveImage(db, file, def.mediaKind, userId),
     data = {
       [def.nameColumn]: input[def.nameColumn],
       is_active: input.is_active,
     };
+  if (key === "sellers" && input.id) data.id = input.id;
   if (key !== "sellers")
     data.code =
       input.code || (await availableCode(db, def.table, input[def.nameColumn]));

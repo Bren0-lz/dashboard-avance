@@ -25,6 +25,15 @@ const updateCatalogSchema = z.object({
   remove_icon: bool.optional().default(false),
 });
 const createSellerSchema = z.object({
+  id: z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    z.coerce
+      .number()
+      .int("Informe um ID inteiro.")
+      .positive("Informe um ID maior que zero.")
+      .max(Number.MAX_SAFE_INTEGER, "O ID informado é muito grande.")
+      .optional(),
+  ),
   full_name: z.string().trim().min(2).max(120),
   is_active: bool.optional().default(true),
 });

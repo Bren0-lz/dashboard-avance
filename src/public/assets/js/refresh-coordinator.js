@@ -5,6 +5,57 @@
   if (typeof module === "object" && module.exports) module.exports = api;
   if (root) root.DashboardRefreshCoordinator = api;
 })(typeof globalThis === "undefined" ? this : globalThis, () => {
+  function createPendingWorkTracker() {
+    const pending = new Set();
+    let version = 0;
+
+    return {
+      track(work) {
+        const tracked = Promise.resolve(work).catch(() => undefined);
+        pending.add(tracked);
+        version += 1;
+        tracked.finally(() => pending.delete(tracked));
+        return work;
+      },
+      snapshot() {
+        return {
+          promise: Promise.all([...pending]).then(() => undefined),
+          version,
+        };
+      },
+    };
+  }
+
+  function createTrackedCompletion({
+    tracker,
+    timeoutMs = 60000,
+    setTimer = setTimeout,
+    clearTimer = clearTimeout,
+  }) {
+    let completed = false;
+    let timer;
+    let settle;
+    const completion = new Promise((resolve) => {
+      settle = resolve;
+    });
+    tracker.track(completion);
+
+    const complete = () => {
+      if (completed) return;
+      completed = true;
+      clearTimer(timer);
+      settle();
+    };
+    const reschedule = (delayMs) => {
+      if (completed) return;
+      clearTimer(timer);
+      timer = setTimer(complete, delayMs);
+    };
+    reschedule(timeoutMs);
+
+    return { complete, reschedule };
+  }
+
   function createRefreshCoordinator({
     refresh,
     pendingWork,
@@ -50,5 +101,9 @@
     };
   }
 
-  return { createRefreshCoordinator };
+  return {
+    createPendingWorkTracker,
+    createRefreshCoordinator,
+    createTrackedCompletion,
+  };
 });

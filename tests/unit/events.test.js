@@ -1,12 +1,16 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 const {
   fetchEvents,
   latestEventId,
 } = require("../../src/modules/dashboard/events.routes");
 const {
+  createPendingWorkTracker,
   createRefreshCoordinator,
+  createTrackedCompletion,
 } = require("../../src/public/assets/js/refresh-coordinator");
 
 const flush = () => new Promise((resolve) => setImmediate(resolve));
@@ -125,4 +129,116 @@ test("recarga também aguarda sons adicionados enquanto já está pendente", asy
   resolveSecond();
   await flush();
   assert.deepEqual(refreshes, ["reload"]);
+});
+
+test("recarga aguarda o fim real do áudio após a fila ser liberada", async () => {
+  const timers = [];
+  const refreshes = [];
+  const tracker = createPendingWorkTracker();
+  let completePlayback;
+  tracker.track(
+    new Promise((resolve) => {
+      completePlayback = resolve;
+    }),
+  );
+  const coordinator = createRefreshCoordinator({
+    pendingWork: () => {
+      const playback = tracker.snapshot();
+      return {
+        promise: Promise.all([Promise.resolve("fila liberada"), playback.promise]),
+        version: `1:${playback.version}`,
+      };
+    },
+    refresh: () => refreshes.push("reload"),
+    setTimer(callback) {
+      timers.push(callback);
+      return callback;
+    },
+    clearTimer() {},
+  });
+
+  coordinator.request();
+  timers[0]();
+  await flush();
+  assert.deepEqual(refreshes, []);
+
+  completePlayback();
+  await flush();
+  assert.deepEqual(refreshes, ["reload"]);
+});
+
+test("falha de reprodução libera a recarga", async () => {
+  const tracker = createPendingWorkTracker();
+  const playback = createTrackedCompletion({ tracker });
+  playback.complete();
+  await tracker.snapshot().promise;
+});
+
+test("timeout de segurança libera a recarga se o áudio não terminar", async () => {
+  const timers = [];
+  const tracker = createPendingWorkTracker();
+  createTrackedCompletion({
+    tracker,
+    timeoutMs: 60000,
+    setTimer(callback, delayMs) {
+      timers.push({ callback, delayMs });
+      return callback;
+    },
+    clearTimer() {},
+  });
+  let settled = false;
+  tracker.snapshot().promise.then(() => {
+    settled = true;
+  });
+
+  await flush();
+  assert.equal(settled, false);
+  assert.equal(timers[0].delayMs, 60000);
+
+  timers[0].callback();
+  await flush();
+  assert.equal(settled, true);
+});
+
+test("som do pódio não tem corte nem liberação antecipada da fila", () => {
+  const source = fs.readFileSync(
+    path.join(__dirname, "../../src/public/assets/js/events.js"),
+    "utf8",
+  );
+  const rules = source.match(
+    /const soundPlaybackRules = \{[\s\S]*?\n {2}\};/,
+  )?.[0];
+  assert.ok(rules, "bloco soundPlaybackRules não encontrado");
+  assert.ok(
+    !rules.includes("ranking_overtake"),
+    "ranking_overtake não pode ter releaseAfterMs/stopAfterMs: o áudio precisa tocar inteiro",
+  );
+  assert.match(rules, /sale_created: \{ releaseAfterMs: 2000, stopAfterMs: 2000 \}/);
+});
+
+test("recarga espera a duração real quando a reprodução é reagendada", async () => {
+  const timers = [];
+  const tracker = createPendingWorkTracker();
+  const playback = createTrackedCompletion({
+    tracker,
+    timeoutMs: 60000,
+    setTimer(callback, delayMs) {
+      timers.push({ callback, delayMs });
+      return timers.length;
+    },
+    clearTimer() {},
+  });
+  let settled = false;
+  tracker.snapshot().promise.then(() => {
+    settled = true;
+  });
+
+  playback.reschedule(8000);
+  await flush();
+  assert.equal(settled, false);
+  assert.equal(timers.at(-1).delayMs, 8000);
+
+  timers.at(-1).callback();
+  await flush();
+  assert.equal(settled, true);
 });

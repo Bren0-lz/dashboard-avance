@@ -24,9 +24,10 @@ if (userId) {
     daily_goal_reached: "/assets/sounds/meta.mp3",
     reminder_30: "/assets/sounds/audio_30.mp3",
   };
+  // ranking_overtake não aparece aqui de propósito: o áudio do pódio toca até o
+  // fim, sem liberar a fila nem a recarga antes do evento "ended".
   const soundPlaybackRules = {
     sale_created: { releaseAfterMs: 2000, stopAfterMs: 2000 },
-    ranking_overtake: { releaseAfterMs: 1600 },
     daily_goal_reached: { releaseAfterMs: 30000, stopAfterMs: 30000 },
   };
 
@@ -38,6 +39,11 @@ if (userId) {
   let unlockPromise;
   let soundQueue = Promise.resolve();
   let soundQueueVersion = 0;
+  const createPendingWorkTracker =
+    window.DashboardRefreshCoordinator?.createPendingWorkTracker;
+  const createTrackedCompletion =
+    window.DashboardRefreshCoordinator?.createTrackedCompletion;
+  const activePlaybackTracker = createPendingWorkTracker?.();
   let drainingPending = false;
   let reminderInFlightSlot = null;
   let isAudioLeader = !navigator.locks;
@@ -52,16 +58,25 @@ if (userId) {
   const refreshCoordinator =
     typeof createRefreshCoordinator === "function"
       ? createRefreshCoordinator({
-          pendingWork: () => ({
-            promise: soundQueue,
-            version: soundQueueVersion,
-          }),
+          pendingWork: () => {
+            const playback = activePlaybackTracker?.snapshot();
+            return {
+              promise: Promise.all([
+                soundQueue,
+                playback?.promise || Promise.resolve(),
+              ]),
+              version: `${soundQueueVersion}:${playback?.version || 0}`,
+            };
+          },
           refresh,
         })
       : {
           request() {
             clearTimeout(fallbackRefreshTimer);
-            fallbackRefreshTimer = window.setTimeout(refresh, 300);
+            fallbackRefreshTimer = window.setTimeout(() => {
+              const playback = activePlaybackTracker?.snapshot();
+              (playback?.promise || Promise.resolve()).then(refresh);
+            }, 300);
           },
         };
 
@@ -184,6 +199,15 @@ if (userId) {
     return new Promise((resolve) => {
       let finished = false;
       const timers = [];
+      const playbackCompletion =
+        activePlaybackTracker && createTrackedCompletion
+          ? createTrackedCompletion({
+              tracker: activePlaybackTracker,
+              setTimer: window.setTimeout.bind(window),
+              clearTimer: window.clearTimeout.bind(window),
+            })
+          : null;
+      const markPlaybackComplete = () => playbackCompletion?.complete();
       const finish = (played) => {
         if (finished) return;
         finished = true;
@@ -195,8 +219,18 @@ if (userId) {
         const source = audioContext.createBufferSource();
         source.buffer = buffer;
         source.connect(audioContext.destination);
-        source.addEventListener("ended", () => finish(true), { once: true });
+        source.addEventListener(
+          "ended",
+          () => {
+            markPlaybackComplete();
+            finish(true);
+          },
+          { once: true },
+        );
         source.start();
+        playbackCompletion?.reschedule(
+          Math.ceil(buffer.duration * 1000) + 1000,
+        );
         if (rule.releaseAfterMs)
           timers.push(
             window.setTimeout(() => finish(true), rule.releaseAfterMs),
@@ -206,6 +240,7 @@ if (userId) {
             try {
               source.stop();
             } catch {}
+            markPlaybackComplete();
           }, rule.stopAfterMs);
         timers.push(
           window.setTimeout(
@@ -218,10 +253,43 @@ if (userId) {
 
       const audio = new Audio(file);
       audio.preload = "auto";
-      audio.addEventListener("ended", () => finish(true), { once: true });
-      audio.addEventListener("error", () => finish(false), { once: true });
+      audio.addEventListener(
+        "ended",
+        () => {
+          markPlaybackComplete();
+          finish(true);
+        },
+        { once: true },
+      );
+      audio.addEventListener(
+        "error",
+        () => {
+          markPlaybackComplete();
+          finish(false);
+        },
+        { once: true },
+      );
+      // Sem releaseAfterMs (caso do pódio), "ended" é o único sinal de término.
+      // A duração real é a rede de segurança se o evento não chegar.
+      if (!rule.releaseAfterMs)
+        audio.addEventListener(
+          "loadedmetadata",
+          () => {
+            if (!Number.isFinite(audio.duration)) return;
+            const durationMs = Math.ceil(audio.duration * 1000) + 1000;
+            playbackCompletion?.reschedule(durationMs);
+            timers.push(
+              window.setTimeout(() => {
+                markPlaybackComplete();
+                finish(true);
+              }, durationMs),
+            );
+          },
+          { once: true },
+        );
       audio.play().catch(() => {
         setSoundControl(false);
+        markPlaybackComplete();
         finish(false);
       });
       if (rule.releaseAfterMs)
@@ -230,10 +298,13 @@ if (userId) {
         window.setTimeout(() => {
           audio.pause();
           audio.currentTime = 0;
+          // pause() não dispara "ended": liberamos a recarga aqui.
+          markPlaybackComplete();
         }, rule.stopAfterMs);
       timers.push(
         window.setTimeout(() => {
           audio.pause();
+          markPlaybackComplete();
           finish(false);
         }, 60000),
       );

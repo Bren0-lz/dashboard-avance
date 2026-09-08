@@ -32,14 +32,14 @@ function excelRouter({ db, env }) {
   r.get("/export", async (req, res, next) => {
     try {
       const data = await service.exportData(db, req.query);
-      const wb = service.createWorkbook(data, {
+      const wb = service.createReportWorkbook(data, {
         appVersion: require("../../../package.json").version,
         timezone: env.APP_TIMEZONE,
       });
       res.set({
         "Content-Type":
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": `attachment; filename="dashboard-avance-${new Date().toISOString().slice(0, 10)}.xlsx"`,
+        "Content-Disposition": `attachment; filename="relatorio-avance-${new Date().toISOString().slice(0, 10)}.xlsx"`,
         "Cache-Control": "no-store",
         "X-Content-Type-Options": "nosniff",
       });

@@ -125,7 +125,7 @@ O vínculo do `external_sale_id` é preservado após exclusão lógica. Se um cl
 
 ## Excel
 
-O export usa o schema 3, com cabeçalhos em português, e contém: Vendedoras, Serviços, Operadoras, Tipos de Venda, Períodos de Meta, Metas, Metas Excluídas, Vendas, Vendas Excluídas e Metadados. Registros ativos e excluídos ficam em abas separadas, inclusive nas exportações por intervalo. A importação restaura esse histórico sem reativá-lo e continua aceitando backups antigos com registros misturados nas abas principais ou cabeçalhos técnicos. Metadados registra schema, versão, UTC e timezone. O round-trip automatizado cobre todas as quatro metas categóricas, origem, total e demais campos atuais.
+O export gera um relatório para leitura, com cabeçalhos e valores em português, referências apresentadas por nome e números formatados no padrão brasileiro. Ele contém: Vendedoras, Serviços, Operadoras, Tipos de Venda, Períodos de Meta, Metas, Metas Excluídas, Vendas, Vendas Excluídas e Metadados. Registros ativos e excluídos ficam em abas separadas, inclusive nas exportações por intervalo. O relatório exportado não é um backup e não pode ser reimportado. A importação continua aceitando backups técnicos no schema 3 e arquivos do dashboard antigo, preservando o histórico sem reativar registros excluídos.
 
 ## Migração SQLite → MySQL
 

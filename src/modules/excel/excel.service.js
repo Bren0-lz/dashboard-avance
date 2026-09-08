@@ -187,7 +187,7 @@ function cleanPreviews() {
   for (const [token, p] of previews)
     if (p.expiresAt <= now) previews.delete(token);
 }
-function createWorkbook(
+function createBackupWorkbook(
   data,
   { appVersion = "1.0.0", timezone = "America/Sao_Paulo" } = {},
 ) {
@@ -223,6 +223,234 @@ function createWorkbook(
   ]);
   return wb;
 }
+const yesNo = (value) =>
+  [true, 1, "1", "true", "sim"].includes(
+    typeof value === "string" ? value.toLocaleLowerCase("pt-BR") : value,
+  )
+    ? "Sim"
+    : "Não";
+const reportDate = (value, withTime = false) => {
+  if (value === null || value === undefined || value === "") return null;
+  if (value instanceof Date) return new Date(value.getTime());
+  const match = String(value).match(
+    /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/,
+  );
+  if (!match) return String(value);
+  return new Date(
+    Date.UTC(
+      Number(match[1]),
+      Number(match[2]) - 1,
+      Number(match[3]),
+      withTime ? Number(match[4] || 0) : 0,
+      withTime ? Number(match[5] || 0) : 0,
+      withTime ? Number(match[6] || 0) : 0,
+    ),
+  );
+};
+const reportTime = (value) => {
+  if (value === null || value === undefined || value === "") return null;
+  const match = String(value).match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if (!match) return String(value);
+  return (
+    (Number(match[1]) * 60 * 60 + Number(match[2]) * 60 + Number(match[3] || 0)) /
+    (24 * 60 * 60)
+  );
+};
+const reportNumber = (value) => {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : String(value);
+};
+const formatCnpj = (value) => {
+  const numbers = String(value ?? "").replace(/\D/g, "");
+  if (!numbers) return null;
+  if (numbers.length !== 14) return String(value);
+  return numbers.replace(
+    /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
+    "$1.$2.$3/$4-$5",
+  );
+};
+const textColumn = (header, value, width = 20) => ({ header, value, width });
+const dateColumn = (header, value) => ({
+  header,
+  value: (row, context) => reportDate(value(row, context)),
+  width: 14,
+  numFmt: "dd/mm/yyyy",
+});
+const dateTimeColumn = (header, value) => ({
+  header,
+  value: (row, context) => reportDate(value(row, context), true),
+  width: 21,
+  numFmt: "dd/mm/yyyy hh:mm:ss",
+});
+const moneyColumn = (header, value) => ({
+  header,
+  value: (row, context) => reportNumber(value(row, context)),
+  width: 22,
+  numFmt: "#.##0,00",
+});
+const reportSheets = {
+  Vendedoras: {
+    key: "sellers",
+    columns: [
+      textColumn("Nome Completo", (row) => row.full_name, 30),
+      textColumn("Ativa", (row) => yesNo(row.is_active), 12),
+      dateTimeColumn("Criado em", (row) => row.created_at),
+      dateTimeColumn("Atualizado em", (row) => row.updated_at),
+    ],
+  },
+  Serviços: {
+    key: "services",
+    columns: [
+      textColumn("Nome", (row) => row.name, 30),
+      textColumn("Ativo", (row) => yesNo(row.is_active), 12),
+      dateTimeColumn("Criado em", (row) => row.created_at),
+      dateTimeColumn("Atualizado em", (row) => row.updated_at),
+    ],
+  },
+  Operadoras: {
+    key: "operators",
+    columns: [
+      textColumn("Nome", (row) => row.name, 30),
+      textColumn("Ativa", (row) => yesNo(row.is_active), 12),
+      dateTimeColumn("Criado em", (row) => row.created_at),
+      dateTimeColumn("Atualizado em", (row) => row.updated_at),
+    ],
+  },
+  "Tipos de Venda": {
+    key: "sale_types",
+    columns: [
+      textColumn("Nome", (row) => row.name, 30),
+      textColumn("Ativo", (row) => yesNo(row.is_active), 12),
+      dateTimeColumn("Criado em", (row) => row.created_at),
+      dateTimeColumn("Atualizado em", (row) => row.updated_at),
+    ],
+  },
+  "Períodos de Meta": {
+    key: "goal_periods",
+    columns: [
+      textColumn("Nome", (row) => row.name, 24),
+      textColumn("Ativo", (row) => yesNo(row.is_active), 12),
+      dateTimeColumn("Criado em", (row) => row.created_at),
+      dateTimeColumn("Atualizado em", (row) => row.updated_at),
+    ],
+  },
+};
+const goalReportColumns = [
+  textColumn("Período da Meta", (row, context) =>
+    context.goalPeriods.get(Number(row.goal_period_id)) || "Não encontrado",
+  ),
+  textColumn(
+    "Vendedora",
+    (row, context) =>
+      row.seller_id
+        ? context.sellers.get(Number(row.seller_id)) || "Não encontrada"
+        : "Todas as vendedoras",
+    24,
+  ),
+  textColumn(
+    "Tipo da Meta",
+    (row) => ({ general: "Geral", individual: "Individual" })[row.goal_type] || row.goal_type,
+  ),
+  moneyColumn("Meta Total", (row) => row.goal_value),
+  moneyColumn("Meta da Manhã", (row) => row.morning_value),
+  moneyColumn("Meta da Tarde", (row) => row.afternoon_value),
+  moneyColumn("Portabilidade da Base", (row) => row.portability_base_value),
+  moneyColumn("Portabilidade Fora da Base", (row) => row.portability_out_value),
+  moneyColumn("Nova Venda da Base", (row) => row.new_base_value),
+  moneyColumn("Nova Venda Fora da Base", (row) => row.new_out_value),
+  dateColumn("Data Inicial", (row) => row.start_date),
+  dateColumn("Data Final", (row) => row.end_date),
+  textColumn("Criado por", (row, context) => context.users.get(Number(row.created_by)) || null),
+  textColumn("Atualizado por", (row, context) => context.users.get(Number(row.updated_by)) || null),
+  textColumn("Excluído por", (row, context) => context.users.get(Number(row.deleted_by)) || null),
+  dateTimeColumn("Criado em", (row) => row.created_at),
+  dateTimeColumn("Atualizado em", (row) => row.updated_at),
+  dateTimeColumn("Excluído em", (row) => row.deleted_at),
+];
+const saleReportColumns = [
+  textColumn("Vendedora", (row, context) => context.sellers.get(Number(row.seller_id)) || "Não encontrada", 24),
+  textColumn("Serviço", (row, context) => context.services.get(Number(row.service_id)) || "Não encontrado", 24),
+  textColumn("Operadora", (row, context) => context.operators.get(Number(row.operator_id)) || "Não encontrada", 24),
+  textColumn("Tipo de Venda", (row, context) => context.saleTypes.get(Number(row.sale_type_id)) || "Não encontrado", 24),
+  dateColumn("Data da Venda", (row) => row.sale_date),
+  { header: "Hora da Venda", value: (row) => reportTime(row.sale_time), width: 16, numFmt: "hh:mm:ss" },
+  textColumn("Turno", (row) => ({ morning: "Manhã", afternoon: "Tarde" })[row.sale_shift] || row.sale_shift),
+  textColumn("CNPJ", (row) => formatCnpj(row.cnpj_digits), 20),
+  textColumn("Razão Social", (row) => row.company_name, 30),
+  textColumn("Telefone de Contato", (row) => row.phone, 22),
+  textColumn("Nome de Quem Fechou", (row) => row.closed_by_name, 26),
+  { header: "Quantidade", value: (row) => reportNumber(row.quantity), width: 14, numFmt: "#.##0" },
+  moneyColumn("Valor Unitário", (row) => row.unit_value),
+  moneyColumn("Valor Total", (row) => row.total_value),
+  textColumn("Possui Documento", (row) => yesNo(row.has_doc), 20),
+  textColumn("Venda da Base", (row) => yesNo(row.is_base_sale), 18),
+  textColumn("Observações", (row) => row.notes, 36),
+  textColumn("Criado por", (row, context) => context.users.get(Number(row.created_by)) || null),
+  textColumn("Atualizado por", (row, context) => context.users.get(Number(row.updated_by)) || null),
+  textColumn("Excluído por", (row, context) => context.users.get(Number(row.deleted_by)) || null),
+  dateTimeColumn("Criado em", (row) => row.created_at),
+  dateTimeColumn("Atualizado em", (row) => row.updated_at),
+  dateTimeColumn("Excluído em", (row) => row.deleted_at),
+];
+Object.assign(reportSheets, {
+  Metas: { key: "goals", columns: goalReportColumns },
+  "Metas Excluídas": { key: "deleted_goals", columns: goalReportColumns },
+  Vendas: { key: "sales", columns: saleReportColumns },
+  "Vendas Excluídas": { key: "deleted_sales", columns: saleReportColumns },
+});
+function lookup(rows, valueColumn) {
+  return new Map((rows || []).map((row) => [Number(row.id), row[valueColumn]]));
+}
+function createReportWorkbook(
+  data,
+  { appVersion = "1.0.0", timezone = "America/Sao_Paulo" } = {},
+) {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "Dashboard Avance";
+  const context = {
+    sellers: lookup(data.sellers, "full_name"),
+    services: lookup(data.services, "name"),
+    operators: lookup(data.operators, "name"),
+    saleTypes: lookup(data.sale_types, "name"),
+    goalPeriods: lookup(data.goal_periods, "name"),
+    users: lookup(data.users, "name"),
+  };
+  for (const [name, spec] of Object.entries(reportSheets)) {
+    const ws = wb.addWorksheet(name);
+    ws.columns = spec.columns.map(({ header, width }) => ({ header, width }));
+    for (const row of data[spec.key] || []) {
+      const output = ws.addRow(spec.columns.map((column) => column.value(row, context)));
+      spec.columns.forEach((column, index) => {
+        if (column.numFmt && output.getCell(index + 1).value !== null)
+          output.getCell(index + 1).numFmt = column.numFmt;
+      });
+    }
+    ws.getRow(1).font = { bold: true };
+    ws.views = [{ state: "frozen", ySplit: 1 }];
+    ws.autoFilter = { from: "A1", to: { row: 1, column: spec.columns.length } };
+  }
+  const meta = wb.addWorksheet("Metadados");
+  meta.columns = [
+    { header: "Informação", key: "key", width: 28 },
+    { header: "Valor", key: "value", width: 58 },
+  ];
+  const generatedAt = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: timezone,
+    dateStyle: "short",
+    timeStyle: "medium",
+  }).format(new Date());
+  meta.addRows([
+    { key: "Tipo do arquivo", value: "Relatório para leitura" },
+    { key: "Pode ser importado?", value: "Não" },
+    { key: "Versão da aplicação", value: appVersion },
+    { key: "Gerado em", value: generatedAt },
+    { key: "Fuso horário", value: timezone },
+  ]);
+  meta.getRow(1).font = { bold: true };
+  meta.views = [{ state: "frozen", ySplit: 1 }];
+  return wb;
+}
 async function exportData(db, { start_date: start, end_date: end } = {}) {
   const data = {};
   for (const spec of Object.values(workbookSpecs)) {
@@ -241,6 +469,7 @@ async function exportData(db, { start_date: start, end_date: end } = {}) {
       query = query.where("start_date", "<=", end);
     data[spec.key] = await query.orderBy("id");
   }
+  data.users = await db("users").select("id", "name").orderBy("id");
   return data;
 }
 function valueOf(cell) {
@@ -513,7 +742,8 @@ function specByKey(key) {
 }
 module.exports = {
   specs,
-  createWorkbook,
+  createBackupWorkbook,
+  createReportWorkbook,
   exportData,
   parseWorkbook,
   createPreview,

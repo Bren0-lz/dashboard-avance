@@ -3,7 +3,8 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const {
   specs,
-  createWorkbook,
+  createBackupWorkbook,
+  createReportWorkbook,
   exportData,
   parseWorkbook,
   createPreview,
@@ -94,7 +95,10 @@ async function createLooseDatabase() {
     connection: { filename: ":memory:" },
     useNullAsDefault: true,
   });
-  await db.schema.createTable("users", (table) => table.integer("id"));
+  await db.schema.createTable("users", (table) => {
+    table.integer("id");
+    table.text("name");
+  });
   await db.schema.createTable("media_files", (table) => table.integer("id"));
   for (const spec of Object.values(specs))
     await db.schema.createTable(spec.table, (table) => {
@@ -108,7 +112,7 @@ async function createLooseDatabase() {
 
 test("round-trip Excel preserva quatro metas categóricas e campos de venda", async () => {
   const data = backupFixture();
-  const wb = createWorkbook(data);
+  const wb = createBackupWorkbook(data);
   assert.equal(wb.getWorksheet("Vendas").rowCount, 2);
   assert.equal(wb.getWorksheet("Vendas Excluídas").rowCount, 2);
   assert.equal(wb.getWorksheet("Metas").rowCount, 2);
@@ -154,13 +158,95 @@ test("round-trip Excel preserva quatro metas categóricas e campos de venda", as
   assert.equal(parsed.data.deleted_goals[0].id, 2);
 });
 
+test("relatorio Excel usa nomes, rotulos e formatos brasileiros sem IDs", async () => {
+  const data = backupFixture();
+  data.users = [{ id: 7, name: "Administradora" }];
+  data.sales[0] = {
+    ...data.sales[0],
+    quantity: 1234,
+    unit_value: "1234.56",
+    total_value: "1523456.78",
+    cnpj_digits: "07404596000134",
+    created_by: 7,
+    created_at: "2026-07-22 10:11:12",
+  };
+  data.goals[0] = { ...data.goals[0], created_by: 7 };
+  data.deleted_sales[0] = { ...data.deleted_sales[0], deleted_by: 7 };
+  data.deleted_goals[0] = { ...data.deleted_goals[0], deleted_by: 7 };
+
+  const original = createReportWorkbook(data, {
+    appVersion: "1.2.3",
+    timezone: "America/Sao_Paulo",
+  });
+  const buffer = await original.xlsx.writeBuffer();
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.load(buffer);
+
+  for (const name of [
+    "Vendedoras",
+    "Serviços",
+    "Operadoras",
+    "Tipos de Venda",
+    "Períodos de Meta",
+    "Metas",
+    "Metas Excluídas",
+    "Vendas",
+    "Vendas Excluídas",
+  ]) {
+    const headers = wb.getWorksheet(name).getRow(1).values.slice(1).map(String);
+    assert.equal(
+      headers.some((header) => /\b(id|código)\b|foto|ícone/i.test(header)),
+      false,
+      `${name}: ${headers.join(", ")}`,
+    );
+  }
+
+  const sales = wb.getWorksheet("Vendas");
+  const saleHeaders = sales.getRow(1).values.slice(1);
+  const saleCell = (header) => sales.getRow(2).getCell(saleHeaders.indexOf(header) + 1);
+  assert.equal(saleCell("Vendedora").value, "Teste");
+  assert.equal(saleCell("Serviço").value, "Internet");
+  assert.equal(saleCell("Operadora").value, "Vivo");
+  assert.equal(saleCell("Tipo de Venda").value, "Novo");
+  assert.equal(saleCell("Turno").value, "Manhã");
+  assert.equal(saleCell("Possui Documento").value, "Sim");
+  assert.equal(saleCell("Venda da Base").value, "Não");
+  assert.equal(saleCell("CNPJ").value, "07.404.596/0001-34");
+  assert.equal(saleCell("Criado por").value, "Administradora");
+  assert.equal(saleCell("Quantidade").value, 1234);
+  assert.equal(saleCell("Quantidade").numFmt, "#.##0");
+  assert.equal(saleCell("Valor Unitário").value, 1234.56);
+  assert.equal(saleCell("Valor Unitário").numFmt, "#.##0,00");
+  assert.equal(saleCell("Valor Total").value, 1523456.78);
+  assert.equal(saleCell("Valor Total").numFmt, "#.##0,00");
+  assert.ok(saleCell("Data da Venda").value instanceof Date);
+  assert.equal(saleCell("Data da Venda").numFmt, "dd/mm/yyyy");
+  assert.equal(saleCell("Hora da Venda").numFmt, "hh:mm:ss");
+  assert.equal(saleCell("Criado em").numFmt, "dd/mm/yyyy hh:mm:ss");
+
+  const goals = wb.getWorksheet("Metas");
+  const goalHeaders = goals.getRow(1).values.slice(1);
+  const goalCell = (header) => goals.getRow(2).getCell(goalHeaders.indexOf(header) + 1);
+  assert.equal(goalCell("Período da Meta").value, "Diário");
+  assert.equal(goalCell("Vendedora").value, "Todas as vendedoras");
+  assert.equal(goalCell("Tipo da Meta").value, "Geral");
+  assert.equal(goalCell("Criado por").value, "Administradora");
+  assert.equal(
+    wb.getWorksheet("Vendas Excluídas").getRow(2).getCell(20).value,
+    "Administradora",
+  );
+  assert.equal(wb.getWorksheet("Metadados").getCell("B3").value, "Não");
+  assert.equal((await parseWorkbook(Buffer.from(buffer), 100)).report.valid, false);
+});
+
 test("exportacao sempre cria as abas historicas mesmo quando vazias", () => {
   const data = backupFixture();
   data.deleted_sales = [];
   data.deleted_goals = [];
-  const wb = createWorkbook(data);
-  assert.equal(wb.getWorksheet("Vendas Excluídas").rowCount, 1);
-  assert.equal(wb.getWorksheet("Metas Excluídas").rowCount, 1);
+  for (const wb of [createBackupWorkbook(data), createReportWorkbook(data)]) {
+    assert.equal(wb.getWorksheet("Vendas Excluídas").rowCount, 1);
+    assert.equal(wb.getWorksheet("Metas Excluídas").rowCount, 1);
+  }
 });
 
 test("exportacao separa registros ativos e excluidos e filtra ambos por periodo", async () => {
@@ -190,7 +276,7 @@ test("exportacao separa registros ativos e excluidos e filtra ambos por periodo"
 });
 
 test("importacao antiga separa deleted_at mesmo sem abas historicas", async () => {
-  const wb = createWorkbook(backupFixture());
+  const wb = createBackupWorkbook(backupFixture());
   for (const [activeName, deletedName] of [
     ["Vendas", "Vendas Excluídas"],
     ["Metas", "Metas Excluídas"],
@@ -209,7 +295,7 @@ test("importacao antiga separa deleted_at mesmo sem abas historicas", async () =
 });
 
 test("importacao aceita os cabecalhos tecnicos dos schemas anteriores", async () => {
-  const wb = createWorkbook(backupFixture());
+  const wb = createBackupWorkbook(backupFixture());
   for (const [name, spec] of Object.entries(specs))
     wb.getWorksheet(name).getRow(1).values = spec.columns;
   const parsed = await parseWorkbook(await wb.xlsx.writeBuffer(), 100);
@@ -223,7 +309,7 @@ test("importacao rejeita IDs repetidos entre abas ativas e excluidas", async () 
   data.deleted_sales[0].id = data.sales[0].id;
   data.deleted_goals[0].id = data.goals[0].id;
   const parsed = await parseWorkbook(
-    await createWorkbook(data).xlsx.writeBuffer(),
+    await createBackupWorkbook(data).xlsx.writeBuffer(),
     100,
   );
   assert.equal(parsed.report.valid, false);
@@ -232,7 +318,7 @@ test("importacao rejeita IDs repetidos entre abas ativas e excluidas", async () 
 });
 
 test("round-trip restaura registros historicos sem reativa-los", async () => {
-  const buffer = await createWorkbook(backupFixture()).xlsx.writeBuffer();
+  const buffer = await createBackupWorkbook(backupFixture()).xlsx.writeBuffer();
   const db = await createLooseDatabase();
   try {
     const preview = await createPreview(buffer, { maxRows: 100 });
@@ -408,7 +494,9 @@ test("importacao preserva fotos e icones atuais dos cadastros correspondentes", 
     goals: [],
     sales: [],
   };
-  const buffer = Buffer.from(await createWorkbook(data).xlsx.writeBuffer());
+  const buffer = Buffer.from(
+    await createBackupWorkbook(data).xlsx.writeBuffer(),
+  );
   const db = knex({
     client: "better-sqlite3",
     connection: { filename: ":memory:" },

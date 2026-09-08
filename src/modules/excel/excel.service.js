@@ -287,7 +287,7 @@ const moneyColumn = (header, value) => ({
   header,
   value: (row, context) => reportNumber(value(row, context)),
   width: 22,
-  numFmt: "#.##0,00",
+  numFmt: '"R$" #.##0,00',
 });
 const reportSheets = {
   Vendedoras: {

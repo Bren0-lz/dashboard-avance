@@ -216,9 +216,9 @@ test("relatorio Excel usa nomes, rotulos e formatos brasileiros sem IDs", async 
   assert.equal(saleCell("Quantidade").value, 1234);
   assert.equal(saleCell("Quantidade").numFmt, "#.##0");
   assert.equal(saleCell("Valor Unitário").value, 1234.56);
-  assert.equal(saleCell("Valor Unitário").numFmt, "#.##0,00");
+  assert.equal(saleCell("Valor Unitário").numFmt, '"R$" #.##0,00');
   assert.equal(saleCell("Valor Total").value, 1523456.78);
-  assert.equal(saleCell("Valor Total").numFmt, "#.##0,00");
+  assert.equal(saleCell("Valor Total").numFmt, '"R$" #.##0,00');
   assert.ok(saleCell("Data da Venda").value instanceof Date);
   assert.equal(saleCell("Data da Venda").numFmt, "dd/mm/yyyy");
   assert.equal(saleCell("Hora da Venda").numFmt, "hh:mm:ss");
@@ -231,6 +231,7 @@ test("relatorio Excel usa nomes, rotulos e formatos brasileiros sem IDs", async 
   assert.equal(goalCell("Vendedora").value, "Todas as vendedoras");
   assert.equal(goalCell("Tipo da Meta").value, "Geral");
   assert.equal(goalCell("Criado por").value, "Administradora");
+  assert.equal(goalCell("Meta Total").numFmt, '"R$" #.##0,00');
   assert.equal(
     wb.getWorksheet("Vendas Excluídas").getRow(2).getCell(20).value,
     "Administradora",

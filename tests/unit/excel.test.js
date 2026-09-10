@@ -160,19 +160,46 @@ test("round-trip Excel preserva quatro metas categóricas e campos de venda", as
 
 test("relatorio Excel usa nomes, rotulos e formatos brasileiros sem IDs", async () => {
   const data = backupFixture();
+  const moneyHeaders = [
+    "Meta Total",
+    "Meta da Manhã",
+    "Meta da Tarde",
+    "Portabilidade da Base",
+    "Portabilidade Fora da Base",
+    "Nova Venda da Base",
+    "Nova Venda Fora da Base",
+  ];
+  const moneyFormat = '"R$" #,##0.00';
   data.users = [{ id: 7, name: "Administradora" }];
   data.sales[0] = {
     ...data.sales[0],
     quantity: 1234,
-    unit_value: "1234.56",
-    total_value: "1523456.78",
+    unit_value: "1234.5678",
+    total_value: "1523456.7891",
     cnpj_digits: "07404596000134",
     created_by: 7,
     created_at: "2026-07-22 10:11:12",
   };
-  data.goals[0] = { ...data.goals[0], created_by: 7 };
-  data.deleted_sales[0] = { ...data.deleted_sales[0], deleted_by: 7 };
-  data.deleted_goals[0] = { ...data.deleted_goals[0], deleted_by: 7 };
+  data.deleted_sales[0] = {
+    ...data.deleted_sales[0],
+    quantity: 5678,
+    unit_value: "9876.5432",
+    total_value: "5555555.5555",
+    deleted_by: 7,
+  };
+  for (const goal of [data.goals[0], data.deleted_goals[0]]) {
+    Object.assign(goal, {
+      goal_value: "7654321.9876",
+      morning_value: "1000.1111",
+      afternoon_value: "2000.2222",
+      portability_base_value: "3000.3333",
+      portability_out_value: "4000.4444",
+      new_base_value: "5000.5555",
+      new_out_value: "6000.6666",
+    });
+  }
+  data.goals[0].created_by = 7;
+  data.deleted_goals[0].deleted_by = 7;
 
   const original = createReportWorkbook(data, {
     appVersion: "1.2.3",
@@ -214,11 +241,11 @@ test("relatorio Excel usa nomes, rotulos e formatos brasileiros sem IDs", async 
   assert.equal(saleCell("CNPJ").value, "07.404.596/0001-34");
   assert.equal(saleCell("Criado por").value, "Administradora");
   assert.equal(saleCell("Quantidade").value, 1234);
-  assert.equal(saleCell("Quantidade").numFmt, "#.##0");
-  assert.equal(saleCell("Valor Unitário").value, 1234.56);
-  assert.equal(saleCell("Valor Unitário").numFmt, '"R$" #.##0,00');
-  assert.equal(saleCell("Valor Total").value, 1523456.78);
-  assert.equal(saleCell("Valor Total").numFmt, '"R$" #.##0,00');
+  assert.equal(saleCell("Quantidade").numFmt, "#,##0");
+  assert.equal(saleCell("Valor Unitário").value, 1234.5678);
+  assert.equal(saleCell("Valor Unitário").numFmt, moneyFormat);
+  assert.equal(saleCell("Valor Total").value, 1523456.7891);
+  assert.equal(saleCell("Valor Total").numFmt, moneyFormat);
   assert.ok(saleCell("Data da Venda").value instanceof Date);
   assert.equal(saleCell("Data da Venda").numFmt, "dd/mm/yyyy");
   assert.equal(saleCell("Hora da Venda").numFmt, "hh:mm:ss");
@@ -231,7 +258,27 @@ test("relatorio Excel usa nomes, rotulos e formatos brasileiros sem IDs", async 
   assert.equal(goalCell("Vendedora").value, "Todas as vendedoras");
   assert.equal(goalCell("Tipo da Meta").value, "Geral");
   assert.equal(goalCell("Criado por").value, "Administradora");
-  assert.equal(goalCell("Meta Total").numFmt, '"R$" #.##0,00');
+  assert.equal(goalCell("Meta Total").value, 7654321.9876);
+  for (const sheetName of ["Metas", "Metas Excluídas"]) {
+    const sheet = wb.getWorksheet(sheetName);
+    const headers = sheet.getRow(1).values.slice(1);
+    for (const header of moneyHeaders) {
+      const cell = sheet.getRow(2).getCell(headers.indexOf(header) + 1);
+      assert.equal(typeof cell.value, "number", `${sheetName}/${header}`);
+      assert.equal(cell.numFmt, moneyFormat, `${sheetName}/${header}`);
+    }
+  }
+  for (const sheetName of ["Vendas", "Vendas Excluídas"]) {
+    const sheet = wb.getWorksheet(sheetName);
+    const headers = sheet.getRow(1).values.slice(1);
+    const cell = (header) => sheet.getRow(2).getCell(headers.indexOf(header) + 1);
+    assert.equal(typeof cell("Quantidade").value, "number", sheetName);
+    assert.equal(cell("Quantidade").numFmt, "#,##0", sheetName);
+    for (const header of ["Valor Unitário", "Valor Total"]) {
+      assert.equal(typeof cell(header).value, "number", `${sheetName}/${header}`);
+      assert.equal(cell(header).numFmt, moneyFormat, `${sheetName}/${header}`);
+    }
+  }
   assert.equal(
     wb.getWorksheet("Vendas Excluídas").getRow(2).getCell(20).value,
     "Administradora",

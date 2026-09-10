@@ -287,7 +287,7 @@ const moneyColumn = (header, value) => ({
   header,
   value: (row, context) => reportNumber(value(row, context)),
   width: 22,
-  numFmt: '"R$" #.##0,00',
+  numFmt: '"R$" #,##0.00',
 });
 const reportSheets = {
   Vendedoras: {
@@ -380,7 +380,7 @@ const saleReportColumns = [
   textColumn("Razão Social", (row) => row.company_name, 30),
   textColumn("Telefone de Contato", (row) => row.phone, 22),
   textColumn("Nome de Quem Fechou", (row) => row.closed_by_name, 26),
-  { header: "Quantidade", value: (row) => reportNumber(row.quantity), width: 14, numFmt: "#.##0" },
+  { header: "Quantidade", value: (row) => reportNumber(row.quantity), width: 14, numFmt: "#,##0" },
   moneyColumn("Valor Unitário", (row) => row.unit_value),
   moneyColumn("Valor Total", (row) => row.total_value),
   textColumn("Possui Documento", (row) => yesNo(row.has_doc), 20),

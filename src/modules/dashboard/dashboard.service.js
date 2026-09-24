@@ -4,6 +4,7 @@ const { DateTime } = require("luxon");
 const { resolveRange, rangesFor } = require("./ranges");
 const { applyFilters } = require("../sales/sales.service");
 const { compareRanking } = require("../sales/ranking");
+const { summedCreditSql } = require("../goals/goal-accounting");
 
 const OPERATOR_COLORS = {
   tim: "#2563eb",
@@ -39,6 +40,7 @@ function normalizeSummary(row) {
     records: Number(row?.records || 0),
     units: Number(row?.units || 0),
     revenue: Number(row?.revenue || 0),
+    goalRevenue: Number(row?.goal_revenue || 0),
     withDocRecords: Number(row?.with_doc_records || 0),
     withoutDocRecords: Number(row?.without_doc_records || 0),
     withDocRevenue: Number(row?.with_doc_revenue || 0),
@@ -52,6 +54,7 @@ async function aggregateTotals(db, filters, range) {
     .select(
       db.raw("COALESCE(SUM(sales.quantity),0) AS units"),
       db.raw("COALESCE(SUM(sales.total_value),0) AS revenue"),
+      db.raw(`${summedCreditSql(db).toQuery()} AS goal_revenue`),
       db.raw("COUNT(*) AS records"),
       db.raw("SUM(sales.has_doc = 1) AS with_doc_records"),
       db.raw("SUM(sales.has_doc = 0) AS without_doc_records"),
@@ -87,6 +90,7 @@ async function aggregate(db, filters, range) {
         .select(
           db.raw("COALESCE(SUM(sales.quantity),0) AS units"),
           db.raw("COALESCE(SUM(sales.total_value),0) AS revenue"),
+          db.raw(`${summedCreditSql(db).toQuery()} AS goal_revenue`),
           db.raw("COUNT(*) AS records"),
           db.raw("SUM(sales.has_doc = 1) AS with_doc_records"),
           db.raw("SUM(sales.has_doc = 0) AS without_doc_records"),
@@ -99,6 +103,7 @@ async function aggregate(db, filters, range) {
         .select("sales.sale_shift")
         .count({ records: "sales.id" })
         .sum({ units: "sales.quantity", revenue: "sales.total_value" })
+        .select(db.raw(`${summedCreditSql(db).toQuery()} AS goal_revenue`))
         .sum({
           with_doc_records: db.raw("sales.has_doc = 1"),
           without_doc_records: db.raw("sales.has_doc = 0"),
@@ -127,6 +132,7 @@ async function aggregate(db, filters, range) {
         .clearSelect()
         .select("sale_types.code", "sales.is_base_sale")
         .sum({ revenue: "sales.total_value" })
+        .select(db.raw(`${summedCreditSql(db).toQuery()} AS goal_revenue`))
         .groupBy("sale_types.code", "sales.is_base_sale"),
       base
         .clone()
@@ -161,7 +167,7 @@ async function aggregate(db, filters, range) {
     categories: Object.fromEntries(
       categories.map((row) => [
         `${row.code}_${row.is_base_sale ? "base" : "out"}`,
-        Number(row.revenue || 0),
+        Number(row.goal_revenue || 0),
       ]),
     ),
     ranking: ranking.map((row, index) => ({
@@ -222,31 +228,50 @@ async function detailsBySeller(db, filters, range) {
   return grouped;
 }
 
+async function matchingGoals(db, range) {
+  const period = await db("goal_periods").where({ code: range.periodCode }).first();
+  if (!period) return [];
+  const archived = await db.schema.hasTable("goal_archives");
+  const query = db("goals as g").select("g.*");
+  if (archived) {
+    query.leftJoin("goal_archives as a", "a.goal_id", "g.id")
+      .select("a.goal_id as archived_id", "a.goal_period_id as archived_period_id", "a.goal_type as archived_type", "a.seller_id as archived_seller_id", "a.goal_value as archived_value", "a.start_date as archived_start", "a.end_date as archived_end")
+      .where((q) => q.whereNull("g.deleted_at").orWhereNotNull("a.goal_id"))
+      .whereRaw("COALESCE(a.goal_period_id, g.goal_period_id) = ?", [period.id]);
+  } else query.whereNull("g.deleted_at").where("g.goal_period_id", period.id);
+  const start = archived ? "COALESCE(a.start_date, g.start_date)" : "g.start_date";
+  const end = archived ? "COALESCE(a.end_date, g.end_date)" : "g.end_date";
+  if (range.period === "custom") query.whereRaw(`${start} >= ? AND ${end} <= ?`, [range.start, range.end]);
+  else query.whereRaw(`${start} <= ? AND ${end} >= ?`, [range.end, range.start]);
+  return (await query).map((row) => row.archived_id ? {
+    ...row, goal_period_id: row.archived_period_id, goal_type: row.archived_type,
+    seller_id: row.archived_seller_id, goal_value: row.archived_value,
+    start_date: row.archived_start, end_date: row.archived_end,
+  } : row);
+}
+
 async function targetFor(db, range, sellerId) {
-  const period = await db("goal_periods")
-    .where({ code: range.periodCode })
-    .first();
-  if (!period) return null;
-  let query = db("goals")
-    .where({ goal_period_id: period.id })
-    .whereNull("deleted_at");
-  if (range.period === "custom")
-    query
-      .where("start_date", ">=", range.start)
-      .where("end_date", "<=", range.end);
-  else
-    query
-      .where("start_date", "<=", range.end)
-      .where("end_date", ">=", range.start);
-  if (sellerId) {
-    const individuals = await query
-      .clone()
-      .where({ goal_type: "individual", seller_id: Number(sellerId) });
-    if (individuals.length) return combineGoals(individuals);
-  }
-  return combineGoals(
-    await query.where({ goal_type: "general" }).whereNull("seller_id"),
-  );
+  const rows = await matchingGoals(db, range);
+  const individuals = sellerId ? rows.filter((row) => row.goal_type === "individual" && Number(row.seller_id) === Number(sellerId)) : [];
+  if (individuals.length) return combineGoals(individuals);
+  return combineGoals(rows.filter((row) => row.goal_type === "general"));
+}
+
+async function goalProgressForRange(db, range, sellerId) {
+  const goals = (await matchingGoals(db, range))
+    .filter((goal) => !sellerId || goal.goal_type === "general" || (goal.goal_type === "individual" && Number(goal.seller_id) === Number(sellerId)))
+    .sort((a, b) => String(a.start_date).localeCompare(String(b.start_date)) || Number(a.id) - Number(b.id));
+  if (!goals.length) return [];
+  const totals = await db("sale_goal_participations as p").join("sales", "sales.id", "p.sale_id")
+    .whereIn("p.goal_id", goals.map((goal) => goal.id)).whereNull("sales.deleted_at")
+    .select("p.goal_id").select(db.raw(`${summedCreditSql(db).toQuery()} AS realized`)).groupBy("p.goal_id");
+  const realized = new Map(totals.map((row) => [String(row.goal_id), Number(row.realized)]));
+  return goals.map((goal) => ({
+    id: goal.id, type: goal.goal_type, seller_id: goal.seller_id,
+    start_date: goal.start_date, end_date: goal.end_date,
+    target: Number(goal.goal_value), realized: realized.get(String(goal.id)) || 0,
+    ...progress(realized.get(String(goal.id)) || 0, goal.goal_value),
+  }));
 }
 
 function combineGoals(rows) {
@@ -281,15 +306,17 @@ function progress(realized, target) {
 }
 
 async function gauge(db, filters, range) {
-  const [data, target] = await Promise.all([
+  const [data, target, goals] = await Promise.all([
     aggregate(db, filters, range),
     targetFor(db, range, filters.seller_id),
+    goalProgressForRange(db, range, filters.seller_id),
   ]);
   return {
     range,
-    realized: data.totals.revenue,
+    realized: data.totals.goalRevenue,
     target: target?.goal_value ?? null,
-    ...progress(data.totals.revenue, target?.goal_value),
+    ...progress(data.totals.goalRevenue, target?.goal_value),
+    goals,
   };
 }
 
@@ -311,11 +338,12 @@ async function getDashboard(db, query, timezone) {
         { ...range, shift: undefined },
       )
     : Promise.resolve(null);
-  const [data, target, sellerDetails, dailyTotals] = await Promise.all([
+  const [data, target, sellerDetails, dailyTotals, goals] = await Promise.all([
     aggregate(db, filters, range),
     targetFor(db, range, filters.seller_id),
     detailsBySeller(db, filters, range),
     dailyTotalsPromise,
+    goalProgressForRange(db, range, filters.seller_id),
   ]);
   data.ranking = data.ranking.map((row) => ({
     ...row,
@@ -350,9 +378,10 @@ async function getDashboard(db, query, timezone) {
     data,
     dailyTotals: dailyTotals || data.totals,
     target,
+    goals,
     targetValue,
     gauges,
-    progress: progress(data.totals.revenue, targetValue),
+    progress: progress(data.totals.goalRevenue, targetValue),
     goalFilterWarning: dimensionFiltered,
   };
 }
@@ -375,6 +404,7 @@ module.exports = {
   progress,
   aggregate,
   targetFor,
+  goalProgressForRange,
   getDashboard,
   references,
 };

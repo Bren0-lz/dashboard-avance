@@ -1,7 +1,7 @@
 "use strict";
 
 const { z } = require("zod");
-const { decimal, Decimal } = require("../../shared/money");
+const { decimal } = require("../../shared/money");
 
 const nullableMoney = z
   .preprocess(
@@ -29,15 +29,15 @@ const goalSchema = z
     goal_type: z.enum(["general", "individual"]),
     seller_id: nullableId,
     goal_value: nullableMoney.refine(
-      (v) => v !== null,
-      "Meta total obrigatória.",
+      (v) => v !== null && Number(v) > 0,
+      "Informe um valor de meta maior que zero.",
     ),
-    morning_value: nullableMoney,
-    afternoon_value: nullableMoney,
-    portability_base_value: nullableMoney,
-    portability_out_value: nullableMoney,
-    new_base_value: nullableMoney,
-    new_out_value: nullableMoney,
+    morning_value: nullableMoney.optional().default(null),
+    afternoon_value: nullableMoney.optional().default(null),
+    portability_base_value: nullableMoney.optional().default(null),
+    portability_out_value: nullableMoney.optional().default(null),
+    new_base_value: nullableMoney.optional().default(null),
+    new_out_value: nullableMoney.optional().default(null),
     start_date: z.iso.date(),
     end_date: z.iso.date(),
   })
@@ -59,38 +59,6 @@ const goalSchema = z
         code: "custom",
         path: ["seller_id"],
         message: "Meta geral não possui vendedora.",
-      });
-    const categories = [
-      "portability_base_value",
-      "portability_out_value",
-      "new_base_value",
-      "new_out_value",
-    ];
-    const usedCategories = categories.filter((key) => value[key] !== null);
-    if (
-      usedCategories.length &&
-      !usedCategories
-        .reduce((sum, key) => sum.plus(value[key]), new Decimal(0))
-        .eq(value.goal_value)
-    )
-      ctx.addIssue({
-        code: "custom",
-        path: ["goal_value"],
-        message:
-          "A soma das categorias preenchidas deve ser igual a meta total.",
-      });
-    const shifts = ["morning_value", "afternoon_value"];
-    const usedShifts = shifts.filter((key) => value[key] !== null);
-    if (
-      usedShifts.length &&
-      !usedShifts
-        .reduce((sum, key) => sum.plus(value[key]), new Decimal(0))
-        .eq(value.goal_value)
-    )
-      ctx.addIssue({
-        code: "custom",
-        path: ["goal_value"],
-        message: "A soma dos turnos preenchidos deve ser igual a meta total.",
       });
   });
 

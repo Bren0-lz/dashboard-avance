@@ -2,6 +2,7 @@
 
 const { AppError } = require("../../shared/errors");
 const { moneyColumns } = require("./goals.schema");
+const { archiveFinishedGoal, syncGoalParticipations, commercialToday } = require("./goal-accounting");
 
 async function listGoals(db, filters = {}) {
   const page = Math.max(1, Number(filters.page) || 1),
@@ -114,26 +115,37 @@ function data(input, userId, current) {
 async function saveGoal(db, { id, input, userId }) {
   return db.transaction(async (trx) => {
     const current = id ? await getGoal(trx, id) : null;
+    if (current && String(current.end_date).slice(0, 10) < commercialToday() &&
+      ["goal_period_id", "goal_type", "seller_id", "start_date", "end_date"].some((key) => String(current[key] ?? "") !== String(input[key] ?? "")))
+      throw new AppError(422, "CLOSED_GOAL_SCOPE", "O período e o escopo de uma meta encerrada não podem ser alterados.");
     await validateScope(trx, input, current);
+    if (current) await archiveFinishedGoal(trx, current);
     if (current) {
       await trx("goals")
         .where({ id })
         .update({ ...data(input, userId, current), updated_at: trx.fn.now() });
+      await syncGoalParticipations(trx, await getGoal(trx, id));
       return { id: Number(id), before: current };
     }
     const [createdId] = await trx("goals").insert(data(input, userId));
+    const created = await getGoal(trx, createdId);
+    await syncGoalParticipations(trx, created);
+    await archiveFinishedGoal(trx, created);
     return { id: Number(createdId), before: null };
   });
 }
 async function deleteGoal(db, id, userId) {
-  const before = await getGoal(db, id);
-  await db("goals").where({ id }).update({
-    deleted_at: db.fn.now(),
-    deleted_by: userId,
-    updated_by: userId,
-    updated_at: db.fn.now(),
+  return db.transaction(async (trx) => {
+    const before = await getGoal(trx, id);
+    await archiveFinishedGoal(trx, before);
+    await trx("goals").where({ id }).update({
+      deleted_at: trx.fn.now(), deleted_by: userId,
+      updated_by: userId, updated_at: trx.fn.now(),
+    });
+    if (String(before.end_date).slice(0, 10) >= commercialToday())
+      await trx("sale_goal_participations").where({ goal_id: id }).delete();
+    return before;
   });
-  return before;
 }
 async function references(db, current) {
   return {

@@ -26,15 +26,15 @@ const totalSalesLabel = totalSalesLabels[dashboard.range.period] || 'Vendas tota
           <div><small>Sem doc</small><strong><%= item.withoutDocRecords %></strong><b><%= brl(item.withoutDocRevenue) %></b></div>
         </div>
         <div class="shift-kpi__total"><small><%= tone === 'morning' ? 'Vendas da manhã' : tone === 'afternoon' ? 'Vendas da tarde' : totalSalesLabel %></small><strong><%= brl(item.revenue) %></strong></div>
-        <div class="shift-kpi__goal shift-kpi__goal--<%= goalState(item.revenue, goal) %>"><div class="shift-kpi__goal-heading"><small><%= tone === 'morning' ? 'Meta da manhã' : tone === 'afternoon' ? 'Meta da tarde' : 'Meta a bater' %></small><% if (goalState(item.revenue, goal) === 'success') { %><span class="shift-kpi__goal-achieved">✓ Meta batida!</span><% } %></div><strong><%= target(goal) %></strong></div>
+        <div class="shift-kpi__goal shift-kpi__goal--<%= goalState(item.goalRevenue, goal) %>"><div class="shift-kpi__goal-heading"><small><%= tone === 'morning' ? 'Meta da manhã' : tone === 'afternoon' ? 'Meta da tarde' : 'Meta a bater' %></small><% if (goalState(item.goalRevenue, goal) === 'success') { %><span class="shift-kpi__goal-achieved">✓ Meta batida!</span><% } %></div><strong><%= target(goal) %></strong><small>Válido para meta: <%= brl(item.goalRevenue) %></small></div>
       </article>
     <% }) %>
 
     <article class="dashboard-card revenue-goals">
-      <header class="dashboard-card__header"><h2>Metas de receita</h2></header>
+      <header class="dashboard-card__header"><h2>Receita válida por categoria</h2></header>
       <div class="revenue-goals__list">
-        <% [['portability_base', 'Portabilidade / Base', 'portability_base_value'], ['portability_out', 'Portabilidade / Fora da base', 'portability_out_value'], ['new_base', 'Novo / Base', 'new_base_value'], ['new_out', 'Novo / Fora da base', 'new_out_value']].forEach(([key, label, goalKey]) => { %>
-          <div title="<%= label %>: <%= brl(dashboard.data.categories[key]) %> / <%= target(dashboard.target?.[goalKey]) %>"><span><%= label %></span><strong><%= brl(dashboard.data.categories[key]) %> <em>/ <%= target(dashboard.target?.[goalKey]) %></em></strong></div>
+        <% [['portability_base', 'Portabilidade / Base'], ['portability_out', 'Portabilidade / Fora da base'], ['new_base', 'Novo / Base'], ['new_out', 'Novo / Fora da base']].forEach(([key, label]) => { %>
+          <div><span><%= label %></span><strong><%= brl(dashboard.data.categories[key]) %></strong></div>
         <% }) %>
       </div>
     </article>
@@ -89,7 +89,8 @@ const totalSalesLabel = totalSalesLabels[dashboard.range.period] || 'Vendas tota
         <label class="dashboard-custom-date" <% if ((query.period || 'today') !== 'custom') { %>hidden<% } %>>Fim<input type="date" name="end_date" value="<%= query.end_date || '' %>"></label>
         <a href="/" class="dashboard-filter-button dashboard-filter-button--clear">Limpar</a><button type="submit" class="dashboard-filter-button">Aplicar</button>
       </form>
-      <p class="sales-results__goal"><%= dashboard.range.shift === 'morning' ? 'Meta da manhã' : dashboard.range.shift === 'afternoon' ? 'Meta da tarde' : 'Meta do período' %>: <strong><%= target(dashboard.targetValue) %></strong></p>
+      <p class="sales-results__goal">Receita válida para metas neste filtro: <strong><%= brl(dashboard.data.totals.goalRevenue) %></strong></p>
+      <% dashboard.goals.forEach((goal) => { %><p class="sales-results__goal"><%= goal.type === 'general' ? 'Meta em grupo' : 'Meta individual da vendedora #' + goal.seller_id %> #<%= goal.id %>: <strong><%= brl(goal.realized) %> / <%= brl(goal.target) %> (<%= goal.percent == null ? '—' : goal.percent.toFixed(1) + '%' %>)</strong></p><% }) %>
     </div>
     <% if (dashboard.goalFilterWarning) { %><p class="dashboard-warning">O realizado está filtrado; a meta não é ajustada por estas dimensões.</p><% } %>
     <div class="ranking-scroll">
@@ -137,7 +138,7 @@ const totalSalesLabel = totalSalesLabels[dashboard.range.period] || 'Vendas tota
         <% [['today', 'Diária'], ['week', 'Semanal'], ['biweekly', 'Quinzenal'], ['month', 'Mensal']].forEach(([key, label]) => { const gauge = dashboard.gauges[key]; const gaugePercent = Math.max(0, Math.min(100, gauge.percent || 0)); const needleAngle = -90 + gaugePercent * 1.8; %>
           <div class="dashboard-gauge dashboard-gauge--<%= key %>">
             <svg viewBox="0 0 120 67" role="img" aria-label="<%= label %>: <%= gauge.percent == null ? 'sem meta' : gauge.percent.toFixed(2) + '%' %>"><path class="dashboard-gauge__track" pathLength="100" d="M10 57 A50 50 0 0 1 110 57"></path><path class="dashboard-gauge__value" pathLength="100" stroke-dasharray="<%= gaugePercent %> <%= 100 - gaugePercent %>" d="M10 57 A50 50 0 0 1 110 57"></path><line class="dashboard-gauge__needle" x1="60" y1="57" x2="60" y2="24" transform="rotate(<%= needleAngle %> 60 57)"></line><circle class="dashboard-gauge__hub" cx="60" cy="57" r="5"></circle><text x="60" y="48" text-anchor="middle"><%= gauge.percent == null ? '0.00%' : gauge.percent.toFixed(2) + '%' %></text></svg>
-            <strong><%= label %></strong><small>Meta: <%= target(gauge.target) %></small>
+            <strong><%= label %></strong><small>Meta: <%= target(gauge.target) %></small><% gauge.goals.forEach((goal) => { %><small><%= goal.type === 'general' ? 'Grupo' : 'Individual #' + goal.seller_id %> — meta #<%= goal.id %>: <%= brl(goal.realized) %> / <%= brl(goal.target) %></small><% }) %>
           </div>
         <% }) %>
       </div>

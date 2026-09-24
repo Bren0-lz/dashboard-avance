@@ -59,8 +59,9 @@ Estas são as decisões recomendadas em `RECRIACAO_HOSTINGER.md`:
 - vendas históricas no almoço são preservadas e reportadas pela migração;
 - dinheiro usa `DECIMAL(14,2)` e `decimal.js`; o servidor recalcula `quantity × unit_value`;
 - tipo/origem de metas usa `sale_types.code` imutável (`new`/`portability`), nunca o nome;
-- `goal_value` é canônico; turnos e quatro categorias são decomposições paralelas e jamais somadas entre si;
-- meta individual existente prevalece sobre geral mesmo quando é zero;
+- `goal_value` é o valor único das novas metas; decomposições antigas de turnos e categorias permanecem nos registros e backups legados;
+- cada venda da base credita 50% do valor para metas (arredondado por venda); fora da base credita 100%, sem alterar a receita financeira;
+- vendas podem participar ao mesmo tempo de uma meta em grupo e de uma meta individual; o histórico mantém o vínculo e a configuração encerrada;
 - intervalos de metas no mesmo escopo não podem se sobrepor;
 - custom soma metas diárias integralmente contidas no intervalo (regra informada na UI);
 - filtros de operadora/serviço/tipo/documento/origem alteram o realizado, não a meta; a UI avisa;

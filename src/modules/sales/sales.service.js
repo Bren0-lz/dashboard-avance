@@ -4,6 +4,7 @@ const { AppError } = require("../../shared/errors");
 const { getSaleShift } = require("../../shared/commercial-time");
 const { calculateTotal } = require("../../shared/money");
 const { sortRanking, didOvertake, didTakeLead } = require("./ranking");
+const { creditedSql, creditedValue, syncSaleParticipations, participationDetails } = require("../goals/goal-accounting");
 
 const fkDefinitions = [
   ["seller_id", "sellers"],
@@ -85,12 +86,19 @@ async function listSales(db, filters = {}) {
     ])
     .limit(pageSize)
     .offset((page - 1) * pageSize);
+  const participations = await participationDetails(db, items.map((item) => item.id));
+  for (const item of items) {
+    item.goal_credit = creditedValue(item.total_value, item.is_base_sale);
+    item.goals = participations.get(String(item.id)) || [];
+  }
   return { items, pagination: { page, pageSize, total, pages } };
 }
 
 async function getSale(db, id) {
   const row = await db("sales").where({ id }).whereNull("deleted_at").first();
   if (!row) throw new AppError(404, "SALE_NOT_FOUND", "Venda não encontrada.");
+  row.goal_credit = creditedValue(row.total_value, row.is_base_sale);
+  row.goals = (await participationDetails(db, [row.id])).get(String(row.id)) || [];
   return row;
 }
 
@@ -184,7 +192,7 @@ async function applicableDailyGoal(db, date, sellerId) {
 
 async function realizedForGoal(db, goal, date, sellerId) {
   const query = db("sales")
-    .sum({ value: "total_value" })
+    .sum({ value: creditedSql(db) })
     .where({ sale_date: date })
     .whereNull("deleted_at");
   if (goal.goal_type === "individual") query.where({ seller_id: sellerId });
@@ -212,6 +220,7 @@ async function mutateSaleInTransaction(
     : null;
   if (operation === "restore" && !current)
     throw new AppError(404, "SALE_NOT_FOUND", "Venda não encontrada.");
+  await trx("goal_periods").select("id").orderBy("id").forUpdate();
   if (operation !== "delete") await validateReferences(trx, input, current);
   const dates = [
     ...new Set([current?.sale_date, input?.sale_date].filter(Boolean)),
@@ -251,6 +260,7 @@ async function mutateSaleInTransaction(
       updated_at: trx.fn.now(),
       updated_by: userId,
     });
+  await syncSaleParticipations(trx, await trx("sales").where({ id: saleId }).first());
   const eventResult = {
     saleCreated: operation === "create" && emitEvents,
     rankingOvertake: false,

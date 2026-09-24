@@ -36,8 +36,8 @@ const selected = (actual, expected) => String(actual ?? '') === String(expected)
           <div class="goal-scope-grid">
             <label for="goal-type">Tipo da Meta
               <select id="goal-type" name="goal_type" required>
-                <option value="general" <%= selected(goal.goal_type || 'general', 'general') %>>Geral</option>
-                <option value="individual" <%= selected(goal.goal_type, 'individual') %>>Individual</option>
+                <option value="general" <%= selected(goal.goal_type || 'general', 'general') %>>Meta em grupo</option>
+                <option value="individual" <%= selected(goal.goal_type, 'individual') %>>Meta individual</option>
               </select>
             </label>
             <label for="goal-period">Per&iacute;odo
@@ -59,43 +59,11 @@ const selected = (actual, expected) => String(actual ?? '') === String(expected)
           </div>
         </fieldset>
 
-        <fieldset class="goal-form-section daily-goal-fields">
-          <legend>Metas por turno</legend>
-          <p class="goal-section-help">Dispon&iacute;veis somente para o per&iacute;odo di&aacute;rio. A soma dos turnos preenchidos deve ser igual &agrave; meta total.</p>
-          <div class="goal-breakdown-grid">
-            <label for="morning-value">Meta da Manh&atilde;
-              <input id="morning-value" type="number" name="morning_value" min="0" step="0.01" inputmode="decimal" value="<%= goal.morning_value ?? '' %>">
-            </label>
-            <label for="afternoon-value">Meta da Tarde
-              <input id="afternoon-value" type="number" name="afternoon_value" min="0" step="0.01" inputmode="decimal" value="<%= goal.afternoon_value ?? '' %>">
-            </label>
-          </div>
-        </fieldset>
-
         <fieldset class="goal-form-section">
-          <legend>Metas de receita por categoria</legend>
-          <p class="goal-section-help">Preencha somente as categorias aplic&aacute;veis. A soma dos campos preenchidos formar&aacute; a meta total.</p>
-          <div class="goal-breakdown-grid">
-            <label for="portability-base-value">Portabilidade / Base
-              <input id="portability-base-value" type="number" name="portability_base_value" min="0" step="0.01" inputmode="decimal" value="<%= goal.portability_base_value ?? '' %>">
-            </label>
-            <label for="portability-out-value">Portabilidade / Fora da Base
-              <input id="portability-out-value" type="number" name="portability_out_value" min="0" step="0.01" inputmode="decimal" value="<%= goal.portability_out_value ?? '' %>">
-            </label>
-            <label for="new-base-value">Novo / Base
-              <input id="new-base-value" type="number" name="new_base_value" min="0" step="0.01" inputmode="decimal" value="<%= goal.new_base_value ?? '' %>">
-            </label>
-            <label for="new-out-value">Novo / Fora da Base
-              <input id="new-out-value" type="number" name="new_out_value" min="0" step="0.01" inputmode="decimal" value="<%= goal.new_out_value ?? '' %>">
-            </label>
-          </div>
-        </fieldset>
-
-        <fieldset class="goal-form-section">
-          <legend>Total e vig&ecirc;ncia</legend>
+          <legend>Valor e vig&ecirc;ncia</legend>
           <div class="goal-total-grid">
-            <label for="goal-value">Meta Total
-              <input id="goal-value" type="number" name="goal_value" min="0" step="0.01" inputmode="decimal" value="<%= goal.goal_value ?? '' %>" required>
+            <label for="goal-value">Valor da meta
+              <input id="goal-value" type="number" name="goal_value" min="0.01" step="0.01" inputmode="decimal" value="<%= goal.goal_value ?? '' %>" required>
             </label>
             <label for="goal-start-date">Data Inicial
               <input id="goal-start-date" type="date" name="start_date" value="<%= goal.start_date || '' %>" required>
@@ -104,7 +72,7 @@ const selected = (actual, expected) => String(actual ?? '') === String(expected)
               <input id="goal-end-date" type="date" name="end_date" value="<%= goal.end_date || '' %>" required>
             </label>
           </div>
-          <p class="goal-total-help" id="goal-calculation-status" aria-live="polite">Valores em R$; informe o faturamento desejado, n&atilde;o a quantidade de vendas.</p>
+          <p class="goal-total-help">Vendas da base contam 50% do valor para a meta; as demais contam 100%.</p>
         </fieldset>
 
         <div class="form-actions goal-form-actions">
@@ -127,8 +95,8 @@ const selected = (actual, expected) => String(actual ?? '') === String(expected)
         <label for="filter-goal-type">Tipo
           <select id="filter-goal-type" name="goal_type">
             <option value="">Todos</option>
-            <option value="general" <%= selected(query.goal_type, 'general') %>>Geral</option>
-            <option value="individual" <%= selected(query.goal_type, 'individual') %>>Individual</option>
+            <option value="general" <%= selected(query.goal_type, 'general') %>>Meta em grupo</option>
+            <option value="individual" <%= selected(query.goal_type, 'individual') %>>Meta individual</option>
           </select>
         </label>
         <label for="filter-goal-period">Per&iacute;odo
@@ -165,7 +133,7 @@ const selected = (actual, expected) => String(actual ?? '') === String(expected)
             <% result.items.forEach((item) => { %>
               <tr>
                 <td><%= item.id %></td>
-                <td><span class="status-badge <%= item.goal_type === 'general' ? 'goal-general' : 'goal-individual' %>"><%= item.goal_type === 'general' ? 'Geral' : 'Individual' %></span></td>
+                <td><span class="status-badge <%= item.goal_type === 'general' ? 'goal-general' : 'goal-individual' %>"><%= item.goal_type === 'general' ? 'Em grupo' : 'Individual' %></span></td>
                 <td><%= item.period_name %></td>
                 <td><% if (item.seller_name) { %><%= item.seller_name %><% } else { %>&mdash;<% } %></td>
                 <td><strong><%= brl(item.goal_value) %></strong></td>

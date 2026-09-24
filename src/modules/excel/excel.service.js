@@ -3,6 +3,7 @@ const ExcelJS = require("exceljs");
 const crypto = require("node:crypto");
 const { AppError } = require("../../shared/errors");
 const { isLegacyWorkbook, parseLegacyWorkbook } = require("./legacy-workbook");
+const { syncGoalParticipations } = require("../goals/goal-accounting");
 const specs = {
   Vendedoras: {
     key: "sellers",
@@ -176,6 +177,14 @@ const workbookSpecs = {
     ...specs.Vendas,
     key: "deleted_sales",
     optional: true,
+  },
+  "Metas Encerradas": {
+    key: "goal_archives", table: "goal_archives", optional: true,
+    columns: ["goal_id", "goal_period_id", "seller_id", "goal_type", "goal_value", "start_date", "end_date", "archived_at"],
+  },
+  "Participações em Metas": {
+    key: "sale_goal_participations", table: "sale_goal_participations", optional: true,
+    columns: ["sale_id", "goal_id"],
   },
 };
 function headersFor(spec) {
@@ -454,6 +463,11 @@ function createReportWorkbook(
 async function exportData(db, { start_date: start, end_date: end } = {}) {
   const data = {};
   for (const spec of Object.values(workbookSpecs)) {
+    if ((spec.table === "goal_archives" || spec.table === "sale_goal_participations") &&
+      !(await db.schema.hasTable(spec.table))) {
+      data[spec.key] = [];
+      continue;
+    }
     let query = db(spec.table).select(spec.columns);
     if (spec.table === "sales" || spec.table === "goals")
       query = spec.key.startsWith("deleted_")
@@ -467,7 +481,7 @@ async function exportData(db, { start_date: start, end_date: end } = {}) {
       query = query.where("end_date", ">=", start);
     if (spec.table === "goals" && end)
       query = query.where("start_date", "<=", end);
-    data[spec.key] = await query.orderBy("id");
+    data[spec.key] = await query.orderBy(spec.columns[0]);
   }
   data.users = await db("users").select("id", "name").orderBy("id");
   return data;
@@ -600,6 +614,13 @@ function validateReferences(data, errors, warnings) {
     if (row.seller_id && !sellers.has(Number(row.seller_id)))
       errors.push(`Meta ${row.id}: vendedora inexistente.`);
   }
+  const goalIds = new Set([...(data.goals || []), ...(data.deleted_goals || [])].map((row) => Number(row.id)));
+  const saleIds = new Set([...(data.sales || []), ...(data.deleted_sales || [])].map((row) => Number(row.id)));
+  for (const row of data.goal_archives || [])
+    if (!goalIds.has(Number(row.goal_id))) errors.push(`Meta encerrada ${row.goal_id}: meta inexistente.`);
+  for (const row of data.sale_goal_participations || [])
+    if (!goalIds.has(Number(row.goal_id)) || !saleIds.has(Number(row.sale_id)))
+      errors.push(`Participação ${row.sale_id}/${row.goal_id}: venda ou meta inexistente.`);
   for (const key of ["services", "operators", "sale_types"]) {
     const codes = new Set();
     for (const row of data[key] || []) {
@@ -689,6 +710,11 @@ async function confirmImport(db, previewId) {
     );
   await db.transaction(async (trx) => {
     const mediaLinks = await currentMediaLinks(trx);
+    const hasGoalHistory = await trx.schema.hasTable("goal_archives");
+    if (hasGoalHistory) {
+      await trx("sale_goal_participations").delete();
+      await trx("goal_archives").delete();
+    }
     if (await trx.schema.hasTable("external_sale_receipts"))
       await trx("external_sale_receipts").delete();
     await trx("sales").delete();
@@ -717,7 +743,10 @@ async function confirmImport(db, previewId) {
       "deleted_goals",
       "sales",
       "deleted_sales",
+      "goal_archives",
+      "sale_goal_participations",
     ]) {
+      if (!hasGoalHistory && (key === "goal_archives" || key === "sale_goal_participations")) continue;
       const rows = (preview.data[key] || []).map((raw) => {
         const row = { ...raw };
         if (!row.created_at) row.created_at = new Date();
@@ -729,6 +758,9 @@ async function confirmImport(db, previewId) {
       });
       if (rows.length) await trx.batchInsert(specByKey(key).table, rows, 500);
     }
+    if (hasGoalHistory && !(preview.data.sale_goal_participations || []).length)
+      for (const goal of await trx("goals").whereNull("deleted_at"))
+        await syncGoalParticipations(trx, goal);
   });
   previews.delete(previewId);
   return {

@@ -642,6 +642,27 @@
     text-align: left;
     margin-top: 18px;
   }
+  .login-password-group {
+    display: grid;
+    gap: 6px;
+  }
+  .login-password-field {
+    position: relative;
+  }
+  .login-password-field input {
+    padding-right: 124px;
+  }
+  .login-password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 5px;
+    transform: translateY(-50%);
+    min-height: 31px;
+    padding: 4px 8px;
+    background: transparent;
+    color: var(--blue);
+    font-size: 13px;
+  }
   .narrow {
     max-width: 620px;
   }

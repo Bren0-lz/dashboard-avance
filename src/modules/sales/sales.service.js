@@ -4,7 +4,7 @@ const { AppError } = require("../../shared/errors");
 const { getSaleShift } = require("../../shared/commercial-time");
 const { calculateTotal } = require("../../shared/money");
 const { sortRanking, didOvertake, didTakeLead } = require("./ranking");
-const { creditedSql, creditedValue, syncSaleParticipations, participationDetails } = require("../goals/goal-accounting");
+const { creditedSql, summedCreditSql, creditedValue, commercialToday, syncSaleParticipations, participationDetails } = require("../goals/goal-accounting");
 
 const fkDefinitions = [
   ["seller_id", "sellers"],
@@ -56,10 +56,90 @@ function joinedQuery(db) {
     .join("sale_types", "sale_types.id", "sales.sale_type_id");
 }
 
+function parseGoalFilters(filters) {
+  const read = (key) => {
+    const value = filters[key];
+    if (value == null || value === "") return "";
+    if (typeof value !== "string")
+      throw new AppError(422, "INVALID_GOAL_FILTER", "Filtro de metas inválido.");
+    return value;
+  };
+  const status = read("goal_status");
+  const type = read("goal_type");
+  const id = read("goal_id");
+  if (!["", "all", "participated", "none", "in_progress", "reached", "missed"].includes(status) ||
+    !["", "general", "individual"].includes(type) ||
+    (id && (!/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(Number(id)))))
+    throw new AppError(422, "INVALID_GOAL_FILTER", "Filtro de metas inválido.");
+  if (status === "none" && (type || id))
+    throw new AppError(422, "INVALID_GOAL_FILTER", "Não combine 'Não participou' com tipo ou meta específica.");
+  return { status: status === "all" ? "" : status, type, id: id ? Number(id) : null };
+}
+
+function applyGoalFilters(db, query, filters) {
+  const { status, type, id } = parseGoalFilters(filters);
+  if (!status && !type && !id) return query;
+  const linkedSale = () => db("sale_goal_participations as linked")
+    .select(db.raw("1")).whereRaw("linked.sale_id = sales.id");
+  if (status === "none") return query.whereNotExists(linkedSale());
+  if (status === "participated" && !type && !id)
+    return query.whereExists(linkedSale());
+
+  const goals = db("goals as g")
+    .leftJoin("goal_archives as a", "a.goal_id", "g.id")
+    .select("g.id")
+    .where((scope) => scope.whereNull("g.deleted_at").orWhereNotNull("a.goal_id"));
+  if (type) goals.whereRaw("COALESCE(a.goal_type, g.goal_type) = ?", [type]);
+  if (id) goals.where("g.id", id);
+  const today = commercialToday();
+  if (status === "in_progress")
+    goals.whereRaw("COALESCE(a.end_date, g.end_date) >= ?", [today]);
+  if (status === "reached" || status === "missed") {
+    const totals = db("sale_goal_participations as counted")
+      .join("sales as counted_sale", "counted_sale.id", "counted.sale_id")
+      .whereNull("counted_sale.deleted_at")
+      .select("counted.goal_id")
+      .select(db.raw(`${summedCreditSql(db, "counted_sale").toQuery()} AS realized`))
+      .groupBy("counted.goal_id");
+    goals.leftJoin(totals.as("totals"), "totals.goal_id", "g.id")
+      .whereRaw("COALESCE(a.end_date, g.end_date) < ?", [today])
+      .whereRaw(`COALESCE(totals.realized, 0) ${status === "reached" ? ">=" : "<"} COALESCE(a.goal_value, g.goal_value)`);
+  }
+  return query.whereExists(linkedSale().whereIn("linked.goal_id", goals));
+}
+
+async function listGoalFilterOptions(db) {
+  const [rows, sellers, periods] = await Promise.all([
+    db("goals as g").leftJoin("goal_archives as a", "a.goal_id", "g.id")
+      .select("g.id", "g.goal_type", "g.seller_id", "g.goal_period_id", "g.start_date", "g.end_date",
+        "a.goal_id as archived_id", "a.goal_type as archived_type", "a.seller_id as archived_seller_id",
+        "a.goal_period_id as archived_period_id", "a.start_date as archived_start", "a.end_date as archived_end")
+      .where((scope) => scope.whereNull("g.deleted_at").orWhereNotNull("a.goal_id"))
+      .orderBy("g.id", "desc"),
+    db("sellers").select("id", "full_name"),
+    db("goal_periods").select("id", "name"),
+  ]);
+  const sellerNames = new Map(sellers.map((row) => [String(row.id), row.full_name]));
+  const periodNames = new Map(periods.map((row) => [String(row.id), row.name]));
+  return rows.map((row) => {
+    const archived = Boolean(row.archived_id);
+    const type = archived ? row.archived_type : row.goal_type;
+    const sellerId = archived ? row.archived_seller_id : row.seller_id;
+    const periodId = archived ? row.archived_period_id : row.goal_period_id;
+    const start = String(archived ? row.archived_start : row.start_date).slice(0, 10);
+    const end = String(archived ? row.archived_end : row.end_date).slice(0, 10);
+    return {
+      id: row.id,
+      type,
+      label: `#${row.id} — ${type === "general" ? "Em grupo" : sellerNames.get(String(sellerId)) || `Vendedora #${sellerId}`} — ${periodNames.get(String(periodId)) || "Período"} (${start} a ${end})`,
+    };
+  });
+}
+
 async function listSales(db, filters = {}) {
   const requestedPage = Math.max(1, Number(filters.page) || 1),
     pageSize = Math.min(100, Math.max(1, Number(filters.page_size) || 10));
-  const base = applyFilters(joinedQuery(db), filters);
+  const base = applyGoalFilters(db, applyFilters(joinedQuery(db), filters), filters);
   const count = await base
     .clone()
     .clearSelect()
@@ -343,6 +423,8 @@ async function listReferences(db, current) {
 
 module.exports = {
   applyFilters,
+  applyGoalFilters,
+  listGoalFilterOptions,
   listSales,
   getSale,
   saleData,

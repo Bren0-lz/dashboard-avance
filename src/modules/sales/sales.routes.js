@@ -10,15 +10,17 @@ const { nowCommercial } = require("../../shared/commercial-time");
 
 async function renderSales(db, env, req, res, form = {}) {
   const edit = req.params.id ? await service.getSale(db, req.params.id) : null;
-  const [result, references] = await Promise.all([
+  const [result, references, goalOptions] = await Promise.all([
     service.listSales(db, req.query),
     service.listReferences(db, edit),
+    service.listGoalFilterOptions(db),
   ]);
   res.status(form.status || 200).render("layouts/main", {
     title: "Vendas",
     page: "pages/sales",
     result,
     references,
+    goalOptions,
     edit,
     query: form.query || req.query,
     now: nowCommercial(env.APP_TIMEZONE),

@@ -104,6 +104,8 @@ Listas aceitam `page` e `page_size` (máximo 100). `GET /api/v1/dashboard/events
 
 `POST /api/v1/goals` aceita `seller_ids` como lista para criar metas individuais de mesmo valor e período em uma única transação; `seller_id` continua aceito para criação individual. A resposta inclui `id` e `ids` dos registros criados.
 
+`GET /api/v1/sales` aceita `goal_status` (`participated`, `none`, `in_progress`, `reached` ou `missed`), `goal_type` (`general` ou `individual`) e `goal_id`. Os três filtros são combinados sobre a mesma meta participante antes da paginação; `none` não pode ser combinado com tipo ou ID.
+
 ## Integracao CRM
 
 Administradores criam e revogam chaves em **Integracoes**. A chave completa aparece uma unica vez e deve ficar somente no cofre de segredos do CRM. Ela permite somente consultar referencias e criar vendas. A API exige `Authorization: Bearer <chave>` e aceita ate 120 requisicoes por minuto por chave.

@@ -1514,10 +1514,10 @@
 }
 .sales-ranking td:nth-last-child(2),
 .sales-ranking th:nth-last-child(2) {
-  text-align: right;
+  text-align: center;
 }
 .sales-ranking td.sales-ranking__goal-cell {
-  text-align: left;
+  text-align: center;
   white-space: normal;
 }
 .sales-ranking__goal-item {

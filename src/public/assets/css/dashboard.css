@@ -604,6 +604,9 @@
 .sales-ranking__total {
   width: 180px;
 }
+.sales-ranking__goal {
+  width: 235px;
+}
 .sales-ranking th {
   padding: 11px 14px;
   background: linear-gradient(
@@ -780,7 +783,7 @@
   font-size: 1.05rem;
   font-weight: 900;
 }
-.sales-ranking__leader td:last-child > strong {
+.sales-ranking__leader td:nth-last-child(2) > strong {
   color: #fde768;
   font-size: 0.9rem;
 }
@@ -1295,7 +1298,7 @@
   font-weight: 900;
   text-shadow: 0 0 10px rgba(250, 255, 90, 0.22);
 }
-.sales-ranking__leader td:last-child > strong {
+.sales-ranking__leader td:nth-last-child(2) > strong {
   color: #ffe768;
   font-size: 1rem;
   text-shadow: 0 0 10px rgba(250, 204, 21, 0.18);
@@ -1390,7 +1393,7 @@
 .sales-dashboard .sales-ranking__leader .seller-cell > strong {
   font-size: 1.43rem;
 }
-.sales-dashboard .sales-ranking__leader td:last-child > strong {
+.sales-dashboard .sales-ranking__leader td:nth-last-child(2) > strong {
   font-size: 1.08rem;
 }
 .sales-dashboard .period-countdown__box strong {
@@ -1478,13 +1481,13 @@
 .sales-results .sale-origin {
   font-size: 0.78rem;
 }
-.sales-results .sales-ranking td:last-child > strong {
+.sales-results .sales-ranking td:nth-last-child(2) > strong {
   font-size: 1.15rem;
 }
 .sales-results .sales-ranking__leader .seller-cell > strong {
   font-size: 1.75rem;
 }
-.sales-results .sales-ranking__leader td:last-child > strong {
+.sales-results .sales-ranking__leader td:nth-last-child(2) > strong {
   font-size: 1.36rem;
 }
 /* Larger catalog icons inside sales chips */
@@ -1508,4 +1511,36 @@
 }
 .operator-card__chart svg {
   overflow: visible;
+}
+.sales-ranking td:nth-last-child(2),
+.sales-ranking th:nth-last-child(2) {
+  text-align: right;
+}
+.sales-ranking td.sales-ranking__goal-cell {
+  text-align: left;
+  white-space: normal;
+}
+.sales-ranking__goal-item {
+  display: grid;
+  gap: 2px;
+  padding: 2px 0;
+  font-size: 0.76rem;
+  line-height: 1.2;
+}
+.sales-ranking__goal-item + .sales-ranking__goal-item {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  margin-top: 4px;
+  padding-top: 6px;
+}
+.sales-ranking__goal-item span,
+.sales-ranking__no-goal {
+  color: #aebbd0;
+}
+.sales-ranking__goal-item b {
+  color: #fff;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+@media (max-width: 1100px) {
+  .sales-ranking { min-width: 900px; }
 }

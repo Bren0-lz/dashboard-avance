@@ -89,14 +89,12 @@ const totalSalesLabel = totalSalesLabels[dashboard.range.period] || 'Vendas tota
         <label class="dashboard-custom-date" <% if ((query.period || 'today') !== 'custom') { %>hidden<% } %>>Fim<input type="date" name="end_date" value="<%= query.end_date || '' %>"></label>
         <a href="/" class="dashboard-filter-button dashboard-filter-button--clear">Limpar</a><button type="submit" class="dashboard-filter-button">Aplicar</button>
       </form>
-      <p class="sales-results__goal">Receita válida para metas neste filtro: <strong><%= brl(dashboard.data.totals.goalRevenue) %></strong></p>
-      <% dashboard.goals.forEach((goal) => { %><p class="sales-results__goal"><%= goal.type === 'general' ? 'Meta em grupo' : 'Meta individual da vendedora #' + goal.seller_id %> #<%= goal.id %>: <strong><%= brl(goal.realized) %> / <%= brl(goal.target) %> (<%= goal.percent == null ? '—' : goal.percent.toFixed(1) + '%' %>)</strong></p><% }) %>
     </div>
     <% if (dashboard.goalFilterWarning) { %><p class="dashboard-warning">O realizado está filtrado; a meta não é ajustada por estas dimensões.</p><% } %>
     <div class="ranking-scroll">
       <table class="sales-ranking">
-        <colgroup><col class="sales-ranking__seller"><col><col class="sales-ranking__total"></colgroup>
-        <thead><tr><th>Vendedora</th><th>Vendas</th><th>Total</th></tr></thead>
+        <colgroup><col class="sales-ranking__seller"><col><col class="sales-ranking__total"><col class="sales-ranking__goal"></colgroup>
+        <thead><tr><th>Vendedora</th><th>Vendas</th><th>Receita</th><th>Meta</th></tr></thead>
         <tbody>
           <% dashboard.data.ranking.forEach((row) => { %>
             <tr class="<%= row.position === 1 ? 'sales-ranking__leader' : '' %>">
@@ -116,9 +114,17 @@ const totalSalesLabel = totalSalesLabels[dashboard.range.period] || 'Vendas tota
                 <% }) %>
               </div></td>
               <td><strong><%= brl(row.revenue) %></strong></td>
+              <td class="sales-ranking__goal-cell">
+                <% const sellerGoals = dashboard.goals.filter((goal) => goal.type === 'general' || Number(goal.seller_id) === Number(row.seller_id)); %>
+                <% if (sellerGoals.length) { %>
+                  <% sellerGoals.forEach((goal) => { %>
+                    <div class="sales-ranking__goal-item"><span><%= goal.type === 'general' ? 'Em grupo' : 'Individual' %></span><b><%= brl(goal.realized) %> / <%= brl(goal.target) %></b></div>
+                  <% }) %>
+                <% } else { %><span class="sales-ranking__no-goal">Sem meta</span><% } %>
+              </td>
             </tr>
           <% }) %>
-          <% if (!dashboard.data.ranking.length) { %><tr><td colspan="3"><div class="dashboard-empty">Nenhuma venda encontrada com estes filtros.</div></td></tr><% } %>
+          <% if (!dashboard.data.ranking.length) { %><tr><td colspan="4"><div class="dashboard-empty">Nenhuma venda encontrada com estes filtros.</div></td></tr><% } %>
         </tbody>
       </table>
     </div>

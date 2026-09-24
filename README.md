@@ -30,6 +30,8 @@ npm run dev
 
 Crie antes o banco/usuário indicados no `.env`. Para o primeiro acesso, preencha temporariamente `BOOTSTRAP_ADMIN_NAME`, `BOOTSTRAP_ADMIN_EMAIL` e uma senha de pelo menos 12 caracteres. O admin só é criado quando `users` está vazia. Após o primeiro login, remova as três variáveis e reinicie/redeploye.
 
+Se perder a senha de administrador, execute `node scripts/reset-admin-password.js admin@exemplo.com` em um terminal interativo com acesso ao banco da instalação. O comando pede a nova senha sem exibi-la e altera apenas uma conta admin ativa com esse e-mail. Use as variáveis `DB_*` da instalação (no `.env` local ou no ambiente do servidor); `SESSION_SECRET` e `BOOTSTRAP_ADMIN_PASSWORD` não recuperam nem redefinem uma senha existente.
+
 Comandos úteis:
 
 ```bash

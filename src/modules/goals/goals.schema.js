@@ -14,6 +14,10 @@ const nullableId = z.preprocess(
   (v) => (v === "" || v == null ? null : v),
   z.union([z.coerce.number().int().positive(), z.null()]),
 );
+const sellerIdsSchema = z.preprocess(
+  (value) => Array.isArray(value) ? value : [value],
+  z.array(z.coerce.number().int().positive()).min(1, "Selecione ao menos uma vendedora.").max(200),
+);
 const moneyColumns = [
   "morning_value",
   "afternoon_value",
@@ -62,4 +66,4 @@ const goalSchema = z
       });
   });
 
-module.exports = { goalSchema, moneyColumns };
+module.exports = { goalSchema, sellerIdsSchema, moneyColumns };

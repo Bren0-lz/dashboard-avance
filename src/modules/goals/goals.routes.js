@@ -2,9 +2,19 @@
 const express = require("express");
 const { requireAuth, requireRole } = require("../../middlewares/auth");
 const { parse } = require("../../shared/validation");
-const { goalSchema } = require("./goals.schema");
+const { goalSchema, sellerIdsSchema } = require("./goals.schema");
 const service = require("./goals.service");
 const { audit } = require("../audit/audit.service");
+const { AppError } = require("../../shared/errors");
+function creationInputs(body) {
+  if (body.seller_ids === undefined) return [parse(goalSchema, body)];
+  if (body.goal_type !== "individual" || (body.seller_id !== undefined && body.seller_id !== ""))
+    throw new AppError(422, "INVALID_GOAL_SELECTION", "Selecione vendedoras somente para uma nova meta individual.");
+  const ids = parse(sellerIdsSchema, body.seller_ids);
+  if (new Set(ids).size !== ids.length)
+    throw new AppError(422, "DUPLICATE_SELLER", "Selecione cada vendedora apenas uma vez.");
+  return ids.map((seller_id) => parse(goalSchema, { ...body, seller_id }));
+}
 async function render(db, req, res) {
   const edit = req.params.id ? await service.getGoal(db, req.params.id) : null;
   const [result, refs] = await Promise.all([
@@ -27,14 +37,13 @@ function goalsRouter({ db }) {
   router.get("/:id/edit", (req, res, next) => render(db, req, res).catch(next));
   router.post("/", requireRole("admin"), async (req, res, next) => {
     try {
-      const input = parse(goalSchema, req.body);
-      const result = await service.saveGoal(db, { input, userId: req.user.id });
-      await audit(db, req, {
-        action: "goal.create",
-        entityType: "goal",
-        entityId: result.id,
-        after: input,
-      });
+      const inputs = creationInputs(req.body);
+      const results = await service.createGoals(db, { inputs, userId: req.user.id });
+      for (const [index, result] of results.entries())
+        await audit(db, req, {
+          action: "goal.create", entityType: "goal",
+          entityId: result.id, after: inputs[index],
+        });
       res.redirect("/goals");
     } catch (e) {
       next(e);
@@ -96,11 +105,9 @@ function goalsApiRouter({ db }) {
   });
   router.post("/", requireRole("admin"), async (req, res, next) => {
     try {
-      const r = await service.saveGoal(db, {
-        input: parse(goalSchema, req.body),
-        userId: req.user.id,
-      });
-      res.status(201).json({ ok: true, data: { id: r.id } });
+      const inputs = creationInputs(req.body);
+      const results = await service.createGoals(db, { inputs, userId: req.user.id });
+      res.status(201).json({ ok: true, data: { id: results[0].id, ids: results.map((result) => result.id) } });
     } catch (e) {
       next(e);
     }
@@ -127,4 +134,4 @@ function goalsApiRouter({ db }) {
   });
   return router;
 }
-module.exports = { goalsRouter, goalsApiRouter };
+module.exports = { goalsRouter, goalsApiRouter, creationInputs };

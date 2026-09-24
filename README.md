@@ -102,6 +102,8 @@ As APIs ficam em `/api/v1/{dashboard,sellers,services,operators,sale-types,sales
 
 Listas aceitam `page` e `page_size` (máximo 100). `GET /api/v1/dashboard/events` é SSE autenticado, aceita `Last-Event-ID` e envia `sale_created`, `ranking_overtake` e `daily_goal_reached`. `/poll` é fallback. O navegador grava o último ID por versão/usuário para consumo idempotente.
 
+`POST /api/v1/goals` aceita `seller_ids` como lista para criar metas individuais de mesmo valor e período em uma única transação; `seller_id` continua aceito para criação individual. A resposta inclui `id` e `ids` dos registros criados.
+
 ## Integracao CRM
 
 Administradores criam e revogam chaves em **Integracoes**. A chave completa aparece uma unica vez e deve ficar somente no cofre de segredos do CRM. Ela permite somente consultar referencias e criar vendas. A API exige `Authorization: Bearer <chave>` e aceita ate 120 requisicoes por minuto por chave.

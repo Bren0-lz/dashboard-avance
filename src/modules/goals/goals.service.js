@@ -112,26 +112,35 @@ function data(input, userId, current) {
   if (!current) result.created_by = userId;
   return result;
 }
-async function saveGoal(db, { id, input, userId }) {
+async function saveGoalInTransaction(trx, { id, input, userId }) {
+  const current = id ? await getGoal(trx, id) : null;
+  if (current && String(current.end_date).slice(0, 10) < commercialToday() &&
+    ["goal_period_id", "goal_type", "seller_id", "start_date", "end_date"].some((key) => String(current[key] ?? "") !== String(input[key] ?? "")))
+    throw new AppError(422, "CLOSED_GOAL_SCOPE", "O período e o escopo de uma meta encerrada não podem ser alterados.");
+  await validateScope(trx, input, current);
+  if (current) await archiveFinishedGoal(trx, current);
+  if (current) {
+    await trx("goals")
+      .where({ id })
+      .update({ ...data(input, userId, current), updated_at: trx.fn.now() });
+    await syncGoalParticipations(trx, await getGoal(trx, id));
+    return { id: Number(id), before: current };
+  }
+  const [createdId] = await trx("goals").insert(data(input, userId));
+  const created = await getGoal(trx, createdId);
+  await syncGoalParticipations(trx, created);
+  await archiveFinishedGoal(trx, created);
+  return { id: Number(createdId), before: null };
+}
+async function saveGoal(db, options) {
+  return db.transaction((trx) => saveGoalInTransaction(trx, options));
+}
+async function createGoals(db, { inputs, userId }) {
   return db.transaction(async (trx) => {
-    const current = id ? await getGoal(trx, id) : null;
-    if (current && String(current.end_date).slice(0, 10) < commercialToday() &&
-      ["goal_period_id", "goal_type", "seller_id", "start_date", "end_date"].some((key) => String(current[key] ?? "") !== String(input[key] ?? "")))
-      throw new AppError(422, "CLOSED_GOAL_SCOPE", "O período e o escopo de uma meta encerrada não podem ser alterados.");
-    await validateScope(trx, input, current);
-    if (current) await archiveFinishedGoal(trx, current);
-    if (current) {
-      await trx("goals")
-        .where({ id })
-        .update({ ...data(input, userId, current), updated_at: trx.fn.now() });
-      await syncGoalParticipations(trx, await getGoal(trx, id));
-      return { id: Number(id), before: current };
-    }
-    const [createdId] = await trx("goals").insert(data(input, userId));
-    const created = await getGoal(trx, createdId);
-    await syncGoalParticipations(trx, created);
-    await archiveFinishedGoal(trx, created);
-    return { id: Number(createdId), before: null };
+    const results = [];
+    for (const input of inputs)
+      results.push(await saveGoalInTransaction(trx, { input, userId }));
+    return results;
   });
 }
 async function deleteGoal(db, id, userId) {
@@ -159,4 +168,4 @@ async function references(db, current) {
       .orderBy("full_name"),
   };
 }
-module.exports = { listGoals, getGoal, saveGoal, deleteGoal, references };
+module.exports = { listGoals, getGoal, saveGoal, createGoals, deleteGoal, references };

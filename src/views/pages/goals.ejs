@@ -48,14 +48,26 @@ const selected = (actual, expected) => String(actual ?? '') === String(expected)
                 <% }) %>
               </select>
             </label>
-            <label class="seller-goal-field" for="goal-seller">Vendedora
-              <select id="goal-seller" name="seller_id">
-                <option value="">Selecione</option>
-                <% refs.sellers.forEach((seller) => { %>
-                  <option value="<%= seller.id %>" <%= selected(goal.seller_id, seller.id) %>><%= seller.full_name %><%= seller.is_active ? '' : ' (inativa)' %></option>
-                <% }) %>
-              </select>
-            </label>
+            <% if (edit) { %>
+              <label class="seller-goal-field" for="goal-seller">Vendedora
+                <select id="goal-seller" name="seller_id">
+                  <option value="">Selecione</option>
+                  <% refs.sellers.forEach((seller) => { %>
+                    <option value="<%= seller.id %>" <%= selected(goal.seller_id, seller.id) %>><%= seller.full_name %><%= seller.is_active ? '' : ' (inativa)' %></option>
+                  <% }) %>
+                </select>
+              </label>
+            <% } else { %>
+              <fieldset class="seller-goal-field goal-seller-picker" aria-describedby="goal-seller-help">
+                <legend>Vendedoras</legend>
+                <p id="goal-seller-help">Selecione uma ou mais. Cada vendedora receberá uma meta própria de mesmo valor e período.</p>
+                <div class="goal-seller-options">
+                  <% refs.sellers.forEach((seller) => { %>
+                    <label class="goal-seller-choice"><input type="checkbox" name="seller_ids" value="<%= seller.id %>"><span><%= seller.full_name %></span></label>
+                  <% }) %>
+                </div>
+              </fieldset>
+            <% } %>
           </div>
         </fieldset>
 

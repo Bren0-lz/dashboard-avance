@@ -25,12 +25,6 @@
   padding: 16px 24px 24px;
   overflow: hidden;
 }
-.theme-dashboard .site-footer {
-  display: grid;
-  min-height: 59px;
-  background: linear-gradient(110deg, #242b3a, #151d2d);
-  color: #aebaca;
-}
 .sales-dashboard,
 .sales-dashboard * {
   min-width: 0;
@@ -1277,15 +1271,15 @@
 /* Hard bounds for full-bleed showcase media */
 @media (min-width: 1501px) {
   .sales-dashboard__top {
-    grid-template-rows: 302px !important;
-    grid-auto-rows: 302px !important;
+    grid-template-rows: var(--dashboard-top-height, 302px) !important;
+    grid-auto-rows: var(--dashboard-top-height, 302px) !important;
   }
   .sales-dashboard__top > *,
   .dashboard-showcase,
   .dashboard-showcase > div {
-    height: 302px !important;
+    height: var(--dashboard-top-height, 302px) !important;
     min-height: 0 !important;
-    max-height: 302px !important;
+    max-height: var(--dashboard-top-height, 302px) !important;
   }
   .dashboard-showcase {
     contain: size layout paint;
@@ -1297,7 +1291,7 @@
     display: block !important;
     width: 100% !important;
     height: 100% !important;
-    max-height: 302px !important;
+    max-height: var(--dashboard-top-height, 302px) !important;
     object-fit: cover !important;
     object-position: center !important;
     transform: none !important;
@@ -1672,4 +1666,86 @@
 }
 @media (max-width: 1100px) {
   .sales-ranking { min-width: 900px; }
+}
+
+@media (min-width: 1501px) and (max-height: 1050px) {
+  .theme-dashboard .page-main {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+  .sales-dashboard__top {
+    --dashboard-top-height: 260px;
+  }
+  .shift-kpi,
+  .revenue-goals,
+  .operator-card {
+    padding: 8px;
+  }
+  .shift-kpi > .dashboard-card__header {
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+  .shift-kpi__documents {
+    gap: 5px;
+    margin-bottom: 6px;
+  }
+  .shift-kpi__documents > div,
+  .shift-kpi__total,
+  .shift-kpi__goal {
+    padding: 6px 8px;
+  }
+  .shift-kpi__goal {
+    margin-top: 6px;
+  }
+  .revenue-goals__list {
+    gap: 5px;
+  }
+  .revenue-goals__list > div {
+    min-height: 43px;
+    padding: 6px 8px;
+  }
+  .sales-results {
+    display: flex;
+    height: 227px;
+    flex-direction: column;
+  }
+  .sales-results .ranking-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+  }
+  .sales-ranking thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  .sales-results .dashboard-empty {
+    min-height: 80px;
+  }
+  .dashboard-performance {
+    padding: 8px 10px;
+  }
+  .dashboard-performance__metrics {
+    margin-top: 6px;
+  }
+  .dashboard-performance__metrics > span {
+    min-height: 44px;
+    padding: 5px 8px;
+  }
+  .dashboard-gauges {
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .dashboard-gauge__no-target {
+    min-height: 25px;
+  }
+  .dashboard-gauge__goal {
+    padding: 4px 6px;
+    line-height: 1.15;
+  }
+  .dashboard-gauge__goal-progress {
+    margin-top: 3px;
+  }
 }

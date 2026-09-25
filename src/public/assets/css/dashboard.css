@@ -905,14 +905,13 @@
   margin-top: 10px;
 }
 .dashboard-gauge {
+  --gauge-color: #3b82f6;
   position: relative;
-  overflow: hidden;
-  min-height: 94px;
-  padding: 7px;
+  min-height: 180px;
+  padding: 15px 12px 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   background: linear-gradient(180deg, #111827, #0b1220);
-  text-align: center;
 }
 .dashboard-gauge::before {
   content: "";
@@ -924,18 +923,65 @@
 .dashboard-gauge--week::before {
   background: linear-gradient(90deg, #a855f7, #6366f1);
 }
+.dashboard-gauge--week {
+  --gauge-color: #a855f7;
+}
 .dashboard-gauge--biweekly::before {
   background: linear-gradient(90deg, #f59e0b, #f97316);
+}
+.dashboard-gauge--biweekly {
+  --gauge-color: #f97316;
 }
 .dashboard-gauge--month::before {
   background: linear-gradient(90deg, #22c55e, #2dd4bf);
 }
+.dashboard-gauge--month {
+  --gauge-color: #2dd4bf;
+}
+.dashboard-gauge__title {
+  display: block;
+  margin-bottom: 8px;
+  color: #fff;
+}
+.dashboard-gauge__summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  min-height: 62px;
+}
 .dashboard-gauge svg {
   display: block;
-  width: 92px;
-  height: 47px;
-  margin: 0 auto;
+  flex: 0 0 100px;
+  width: 100px;
+  height: 56px;
   overflow: visible;
+}
+.dashboard-gauge__summary > span {
+  display: flex;
+  flex: 1 1 110px;
+  flex-direction: column;
+  gap: 2px;
+}
+.dashboard-gauge__summary small,
+.dashboard-gauge__summary b {
+  overflow-wrap: anywhere;
+}
+.dashboard-gauge__summary small {
+  color: #aebbd0;
+  font-size: 0.73rem;
+}
+.dashboard-gauge__summary b {
+  color: #fff;
+  font-size: 0.9rem;
+}
+.dashboard-gauge__no-target {
+  display: flex;
+  align-items: center;
+  min-height: 62px;
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  font-weight: 700;
 }
 .dashboard-gauge path {
   fill: none;
@@ -946,16 +992,7 @@
   stroke: #273247;
 }
 .dashboard-gauge__value {
-  stroke: #3b82f6;
-}
-.dashboard-gauge--week .dashboard-gauge__value {
-  stroke: #7c3aed;
-}
-.dashboard-gauge--biweekly .dashboard-gauge__value {
-  stroke: #f97316;
-}
-.dashboard-gauge--month .dashboard-gauge__value {
-  stroke: #2dd4bf;
+  stroke: var(--gauge-color);
 }
 .dashboard-gauge__needle {
   stroke: #dceaff;
@@ -970,15 +1007,78 @@
   font-size: 9px;
   font-weight: 900;
 }
-.dashboard-gauge > strong {
-  display: block;
-  color: #fff;
+.dashboard-gauge__goals {
+  display: grid;
+  gap: 7px;
+  margin-top: 10px;
+}
+.dashboard-gauge__goal {
+  min-width: 0;
+  padding: 8px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.035);
+}
+.dashboard-gauge__goal-heading,
+.dashboard-gauge__goal-values {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+}
+.dashboard-gauge__goal-heading span {
+  color: #f8fafc;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.dashboard-gauge__goal-heading small,
+.dashboard-gauge__goal-values span,
+.dashboard-gauge__goal-percent {
+  color: #aebbd0;
   font-size: 0.72rem;
 }
-.dashboard-gauge > small {
+.dashboard-gauge__goal-values {
+  margin: 5px 0 4px;
+  font-variant-numeric: tabular-nums;
+}
+.dashboard-gauge__goal-values strong {
+  color: #fff;
+  overflow-wrap: anywhere;
+}
+.dashboard-gauge__goal-values span {
+  overflow-wrap: anywhere;
+}
+.dashboard-gauge__goal progress {
   display: block;
-  color: #9ca8bc;
-  font-size: 0.55rem;
+  width: 100%;
+  height: 6px;
+  border: 0;
+  border-radius: 99px;
+  overflow: hidden;
+  accent-color: var(--gauge-color);
+}
+.dashboard-gauge__goal progress::-webkit-progress-bar {
+  border-radius: 99px;
+  background: #273247;
+}
+.dashboard-gauge__goal progress::-webkit-progress-value {
+  border-radius: 99px;
+  background: var(--gauge-color);
+}
+.dashboard-gauge__goal progress::-moz-progress-bar {
+  border-radius: 99px;
+  background: var(--gauge-color);
+}
+.dashboard-gauge__goal-percent {
+  display: block;
+  margin-top: 3px;
+  text-align: right;
+}
+.dashboard-gauge__empty {
+  margin: 10px 0 0;
+  color: #aebbd0;
+  font-size: 0.76rem;
 }
 @media (max-width: 1500px) and (min-width: 901px) {
   .sales-dashboard__top {
@@ -1417,10 +1517,6 @@
 .sales-dashboard .dashboard-gauge > strong {
   font-size: 1.1rem;
   line-height: 1.2;
-}
-.sales-dashboard .dashboard-gauge > small {
-  font-size: 0.95rem;
-  line-height: 1.25;
 }
 .sales-dashboard .operator-chart-tooltip > strong {
   font-size: 0.79rem;

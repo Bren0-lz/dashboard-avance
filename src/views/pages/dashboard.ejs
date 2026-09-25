@@ -143,8 +143,26 @@ const totalSalesLabel = totalSalesLabels[dashboard.range.period] || 'Vendas tota
       <div class="dashboard-gauges">
         <% [['today', 'Diária'], ['week', 'Semanal'], ['biweekly', 'Quinzenal'], ['month', 'Mensal']].forEach(([key, label]) => { const gauge = dashboard.gauges[key]; const gaugePercent = Math.max(0, Math.min(100, gauge.percent || 0)); const needleAngle = -90 + gaugePercent * 1.8; %>
           <div class="dashboard-gauge dashboard-gauge--<%= key %>">
-            <svg viewBox="0 0 120 67" role="img" aria-label="<%= label %>: <%= gauge.percent == null ? 'sem meta' : gauge.percent.toFixed(2) + '%' %>"><path class="dashboard-gauge__track" pathLength="100" d="M10 57 A50 50 0 0 1 110 57"></path><path class="dashboard-gauge__value" pathLength="100" stroke-dasharray="<%= gaugePercent %> <%= 100 - gaugePercent %>" d="M10 57 A50 50 0 0 1 110 57"></path><line class="dashboard-gauge__needle" x1="60" y1="57" x2="60" y2="24" transform="rotate(<%= needleAngle %> 60 57)"></line><circle class="dashboard-gauge__hub" cx="60" cy="57" r="5"></circle><text x="60" y="48" text-anchor="middle"><%= gauge.percent == null ? '0.00%' : gauge.percent.toFixed(2) + '%' %></text></svg>
-            <strong><%= label %></strong><small>Meta: <%= target(gauge.target) %></small><% gauge.goals.forEach((goal) => { %><small><%= goal.type === 'general' ? 'Grupo' : 'Individual #' + goal.seller_id %> — meta #<%= goal.id %>: <%= brl(goal.realized) %> / <%= brl(goal.target) %></small><% }) %>
+            <strong class="dashboard-gauge__title"><%= label %></strong>
+            <% if (gauge.percent != null) { %>
+              <div class="dashboard-gauge__summary">
+                <svg viewBox="0 0 120 67" role="img" aria-label="Meta geral <%= label.toLowerCase() %>: <%= gauge.percent.toFixed(2) %>%"><path class="dashboard-gauge__track" pathLength="100" d="M10 57 A50 50 0 0 1 110 57"></path><path class="dashboard-gauge__value" pathLength="100" stroke-dasharray="<%= gaugePercent %> <%= 100 - gaugePercent %>" d="M10 57 A50 50 0 0 1 110 57"></path><line class="dashboard-gauge__needle" x1="60" y1="57" x2="60" y2="24" transform="rotate(<%= needleAngle %> 60 57)"></line><circle class="dashboard-gauge__hub" cx="60" cy="57" r="5"></circle><text x="60" y="48" text-anchor="middle"><%= gauge.percent.toFixed(2) %>%</text></svg>
+                <span><small>Meta geral</small><b><%= brl(gauge.target) %></b><small>Realizado: <%= brl(gauge.realized) %></small></span>
+              </div>
+            <% } else { %>
+              <div class="dashboard-gauge__no-target">Sem meta geral</div>
+            <% } %>
+            <% if (gauge.goals.length) { %>
+              <div class="dashboard-gauge__goals" aria-label="Metas <%= label.toLowerCase() %>">
+                <% gauge.goals.forEach((goal) => { const goalLabel = goal.type === 'general' ? 'Grupo' : goal.seller_name || 'Vendedora #' + goal.seller_id; %>
+                  <div class="dashboard-gauge__goal">
+                    <div class="dashboard-gauge__goal-heading"><span title="<%= goalLabel %>"><%= goalLabel %></span><small>Meta #<%= goal.id %></small></div>
+                    <div class="dashboard-gauge__goal-values"><strong><%= brl(goal.realized) %></strong><span>de <%= target(goal.target) %></span></div>
+                    <% if (goal.percent != null) { %><progress max="100" value="<%= Math.max(0, Math.min(100, goal.percent)) %>" aria-label="Progresso de <%= goalLabel %>, meta #<%= goal.id %>"><%= goal.percent.toFixed(2) %>%</progress><small class="dashboard-gauge__goal-percent"><%= goal.percent.toFixed(2) %>% da meta</small><% } %>
+                  </div>
+                <% }) %>
+              </div>
+            <% } else { %><p class="dashboard-gauge__empty">Nenhuma meta no período.</p><% } %>
           </div>
         <% }) %>
       </div>

@@ -28,6 +28,10 @@ test("histórico registra metas simultâneas e preserva escopo encerrado", async
     table.increments("id"); table.integer("seller_id"); table.date("sale_date");
     table.decimal("total_value"); table.boolean("is_base_sale"); table.timestamp("deleted_at");
   });
+  await db.schema.createTable("sellers", (table) => {
+    table.increments("id"); table.string("full_name"); table.boolean("is_active");
+  });
+  await db("sellers").insert({ id: 7, full_name: "Vendedora inativa", is_active: false });
   const [saleId] = await db("sales").insert({ seller_id: 7, sale_date: "2025-01-10", total_value: 200, is_base_sale: true });
   await migration.up(db);
   const [groupId] = await db("goals").insert({ goal_period_id: 1, goal_type: "general", goal_value: 100, start_date: "2025-01-01", end_date: "2025-01-31" });
@@ -38,8 +42,8 @@ test("histórico registra metas simultâneas e preserva escopo encerrado", async
     [groupId, "100.00", "reached"], [individualId, "100.00", "missed"],
   ]);
   const range = { period: "month", periodCode: "monthly", start: "2025-01-01", end: "2025-01-31" };
-  assert.deepEqual((await goalProgressForRange(db, range, 7)).map((goal) => [goal.id, goal.realized]), [
-    [groupId, 100], [individualId, 100],
+  assert.deepEqual((await goalProgressForRange(db, range, 7)).map((goal) => [goal.id, goal.realized, goal.seller_name]), [
+    [groupId, 100, null], [individualId, 100, "Vendedora inativa"],
   ]);
   const group = await db("goals").where({ id: groupId }).first();
   await archiveFinishedGoal(db, group);

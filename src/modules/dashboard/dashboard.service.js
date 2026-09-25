@@ -262,14 +262,20 @@ async function goalProgressForRange(db, range, sellerId) {
     .filter((goal) => !sellerId || goal.goal_type === "general" || (goal.goal_type === "individual" && Number(goal.seller_id) === Number(sellerId)))
     .sort((a, b) => String(a.start_date).localeCompare(String(b.start_date)) || Number(a.id) - Number(b.id));
   if (!goals.length) return [];
-  const totals = await db("sale_goal_participations as p").join("sales", "sales.id", "p.sale_id")
-    .whereIn("p.goal_id", goals.map((goal) => goal.id)).whereNull("sales.deleted_at")
-    .select("p.goal_id").select(db.raw(`${summedCreditSql(db).toQuery()} AS realized`)).groupBy("p.goal_id");
+  const [totals, sellers] = await Promise.all([
+    db("sale_goal_participations as p").join("sales", "sales.id", "p.sale_id")
+      .whereIn("p.goal_id", goals.map((goal) => goal.id)).whereNull("sales.deleted_at")
+      .select("p.goal_id").select(db.raw(`${summedCreditSql(db).toQuery()} AS realized`)).groupBy("p.goal_id"),
+    db("sellers").whereIn("id", goals.filter((goal) => goal.seller_id != null).map((goal) => goal.seller_id))
+      .select("id", "full_name"),
+  ]);
   const realized = new Map(totals.map((row) => [String(row.goal_id), Number(row.realized)]));
+  const sellerNames = new Map(sellers.map((seller) => [String(seller.id), seller.full_name]));
   return goals.map((goal) => ({
     id: goal.id, type: goal.goal_type, seller_id: goal.seller_id,
+    seller_name: sellerNames.get(String(goal.seller_id)) || null,
     start_date: goal.start_date, end_date: goal.end_date,
-    target: Number(goal.goal_value), realized: realized.get(String(goal.id)) || 0,
+    target: goal.goal_value == null ? null : Number(goal.goal_value), realized: realized.get(String(goal.id)) || 0,
     ...progress(realized.get(String(goal.id)) || 0, goal.goal_value),
   }));
 }
@@ -307,8 +313,8 @@ function progress(realized, target) {
 
 async function gauge(db, filters, range) {
   const [data, target, goals] = await Promise.all([
-    aggregate(db, filters, range),
-    targetFor(db, range, filters.seller_id),
+    aggregate(db, { ...filters, seller_id: undefined }, range),
+    targetFor(db, range, null),
     goalProgressForRange(db, range, filters.seller_id),
   ]);
   return {

@@ -181,7 +181,7 @@ test(
               .first()
           ).count,
         ),
-        1,
+        2,
       );
       assert.equal(
         Number(

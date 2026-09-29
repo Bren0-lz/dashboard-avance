@@ -5,26 +5,49 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title><%= title %> — Dashboard Avance</title>
   <link rel="stylesheet" href="/assets/css/app.css">
+  <link rel="stylesheet" href="/assets/css/login.css">
   <script src="/assets/js/login.js" defer></script>
 </head>
-<body>
-  <main class="center-card">
-    <h1>Dashboard Avance</h1>
-    <p>Entre para continuar.</p>
-    <% if (error) { %><div class="alert error" role="alert"><%= error %></div><% } %>
-    <form method="post" action="/login" class="stack">
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-      <input type="hidden" name="next" value="<%= next %>">
-      <label>E-mail<input name="email" type="email" required autocomplete="username" maxlength="191"></label>
-      <div class="login-password-group">
-        <label for="login-password">Senha</label>
-        <div class="login-password-field">
-          <input id="login-password" name="password" type="password" required autocomplete="current-password" maxlength="200">
-          <button type="button" class="login-password-toggle" aria-controls="login-password" aria-pressed="false">Mostrar senha</button>
-        </div>
+<body class="login-page">
+  <main class="login-shell">
+    <section class="login-brand" aria-label="Avance VIP">
+      <img class="login-logo" src="/assets/img/logo.svg" alt="Avance VIP" width="220" height="58">
+      <div class="login-brand-copy">
+        <span class="login-eyebrow">ÁREA EXCLUSIVA</span>
+        <h2>Seu trabalho em uma nova perspectiva.</h2>
+        <p>Resultados e decisões, tudo em um só lugar.</p>
       </div>
-      <button type="submit">Entrar</button>
-    </form>
+      <span class="login-brand-footer">DASHBOARD AVANCE</span>
+    </section>
+
+    <section class="login-content" aria-labelledby="login-title">
+      <div class="login-heading">
+        <span class="login-heading-mark" aria-hidden="true"></span>
+        <p class="login-kicker">BEM-VINDO DE VOLTA</p>
+        <h1 id="login-title">Acesse sua conta</h1>
+        <p>Insira seus dados para continuar.</p>
+      </div>
+
+      <% if (error) { %><div class="login-error" role="alert"><%= error %></div><% } %>
+
+      <form method="post" action="/login" class="login-form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <input type="hidden" name="next" value="<%= next %>">
+        <div class="login-field">
+          <label for="login-email">E-mail</label>
+          <input id="login-email" name="email" type="email" required autocomplete="username" maxlength="191" placeholder="seu@email.com">
+        </div>
+        <div class="login-field">
+          <label for="login-password">Senha</label>
+          <div class="login-password-field">
+            <input id="login-password" name="password" type="password" required autocomplete="current-password" maxlength="200" placeholder="Digite sua senha">
+            <button type="button" class="login-password-toggle" aria-label="Mostrar senha" aria-controls="login-password" aria-pressed="false">Mostrar</button>
+          </div>
+        </div>
+        <button class="login-submit" type="submit">Entrar <span aria-hidden="true">→</span></button>
+      </form>
+      <p class="login-help">Acesso exclusivo para a equipe Avance.</p>
+    </section>
   </main>
 </body>
 </html>

@@ -60,8 +60,16 @@
     background: rgba(102, 173, 255, 0.08);
   }
 
+  .login-logo-frame {
+    align-self: flex-start;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(4, 17, 47, 0.15);
+  }
+
   .login-logo {
-    width: 180px;
+    width: 220px;
     height: auto;
   }
 
@@ -254,8 +262,12 @@
       display: none;
     }
 
+    .login-logo-frame {
+      padding: 9px 11px;
+    }
+
     .login-logo {
-      width: 145px;
+      width: 175px;
     }
 
     .login-content {

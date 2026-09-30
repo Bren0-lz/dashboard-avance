@@ -5,20 +5,20 @@
     display: grid;
     place-items: center;
     padding: 32px;
-    background: radial-gradient(circle at 8% 12%, #dceaff 0, transparent 30%),
-      radial-gradient(circle at 95% 88%, #e1e8ff 0, transparent 32%), #f3f6fb;
+    background: radial-gradient(circle at 0 0, #254c85 0, transparent 36%),
+      radial-gradient(circle at 100% 100%, #122d5a 0, transparent 38%), #0c1c38;
   }
 
   .login-shell {
     display: grid;
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr);
-    width: min(100%, 960px);
-    min-height: 560px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.95fr);
+    width: min(100%, 1020px);
+    min-height: 600px;
     overflow: hidden;
-    border: 1px solid #e2e9f3;
-    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 22px;
     background: #fff;
-    box-shadow: 0 28px 70px rgba(23, 47, 91, 0.12), 0 4px 14px rgba(23, 47, 91, 0.05);
+    box-shadow: 0 32px 80px rgba(2, 12, 32, 0.32);
   }
 
   .login-brand {
@@ -27,11 +27,11 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 40px;
+    gap: 48px;
     overflow: hidden;
-    padding: 42px;
-    color: #fff;
-    background: linear-gradient(145deg, #101c43 0%, #142e71 58%, #1850a8 100%);
+    padding: clamp(36px, 5vw, 58px);
+    color: #11264a;
+    background: radial-gradient(circle at 95% 90%, #dcecff 0, transparent 45%), #fff;
   }
 
   .login-brand::before,
@@ -39,7 +39,7 @@
     content: "";
     position: absolute;
     z-index: -1;
-    border: 1px solid rgba(183, 218, 255, 0.16);
+    border: 1px solid rgba(39, 100, 177, 0.1);
     border-radius: 50%;
     pointer-events: none;
   }
@@ -49,7 +49,7 @@
     height: 440px;
     right: -230px;
     top: 70px;
-    box-shadow: 0 0 0 74px rgba(149, 205, 255, 0.055), 0 0 0 148px rgba(149, 205, 255, 0.035);
+    box-shadow: 0 0 0 74px rgba(75, 145, 225, 0.035), 0 0 0 148px rgba(75, 145, 225, 0.025);
   }
 
   .login-brand::after {
@@ -57,19 +57,18 @@
     height: 210px;
     left: -150px;
     bottom: -100px;
-    background: rgba(102, 173, 255, 0.08);
+    background: rgba(102, 173, 255, 0.05);
   }
 
   .login-logo-frame {
     align-self: flex-start;
-    padding: 12px 14px;
-    border-radius: 12px;
-    background: #fff;
-    box-shadow: 0 8px 24px rgba(4, 17, 47, 0.15);
+    width: min(100%, 330px);
+    padding-bottom: 24px;
+    border-bottom: 1px solid #dbe7f4;
   }
 
   .login-logo {
-    width: 220px;
+    width: 100%;
     height: auto;
   }
 
@@ -86,37 +85,38 @@
   }
 
   .login-eyebrow {
-    color: #9fd5ff;
+    color: #1d66b0;
   }
 
   .login-brand h2 {
     margin: 16px 0;
-    font-size: clamp(30px, 3.5vw, 42px);
+    font-size: clamp(32px, 3.5vw, 44px);
     line-height: 1.12;
     letter-spacing: -0.045em;
   }
 
   .login-brand-copy p {
-    color: #c5d8f4;
+    color: #546783;
     line-height: 1.6;
   }
 
   .login-brand-footer {
-    color: #8eb8ec;
+    color: #6d82a2;
   }
 
   .login-content {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: clamp(32px, 6vw, 68px);
+    padding: clamp(36px, 6vw, 72px);
+    background: #f4f8fe;
   }
 
   .login-heading-mark {
     display: block;
     width: 32px;
     height: 4px;
-    margin-bottom: 26px;
+    margin-bottom: 30px;
     border-radius: 4px;
     background: #2870e8;
   }
@@ -160,7 +160,7 @@
     padding: 12px 15px;
     border: 1px solid #cdd8e8;
     border-radius: 10px;
-    background: #f9fbff;
+    background: #fff;
     color: #172744;
     transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
   }
@@ -210,12 +210,12 @@
     margin-top: 6px;
     padding: 12px 18px;
     border-radius: 10px;
-    background: #2563eb;
-    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.19);
+    background: #1657ba;
+    box-shadow: 0 8px 18px rgba(22, 87, 186, 0.2);
   }
 
   .login-submit:hover {
-    background: #1d4ed8;
+    background: #10499f;
     filter: none;
   }
 
@@ -253,8 +253,8 @@
     }
 
     .login-brand {
-      gap: 12px;
-      padding: 25px 28px;
+      gap: 0;
+      padding: 28px 28px 20px;
     }
 
     .login-brand-copy,
@@ -263,15 +263,12 @@
     }
 
     .login-logo-frame {
-      padding: 9px 11px;
-    }
-
-    .login-logo {
-      width: 175px;
+      width: min(100%, 260px);
+      padding-bottom: 20px;
     }
 
     .login-content {
-      padding: 34px 28px 36px;
+      padding: 30px 28px 36px;
     }
 
     .login-heading-mark {

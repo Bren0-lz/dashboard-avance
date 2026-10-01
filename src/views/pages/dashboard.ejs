@@ -91,7 +91,7 @@ const totalSalesLabel = totalSalesLabels[dashboard.range.period] || 'Vendas tota
       </form>
     </div>
     <% if (dashboard.goalFilterWarning) { %><p class="dashboard-warning">O realizado está filtrado; a meta não é ajustada por estas dimensões.</p><% } %>
-    <div class="ranking-scroll">
+    <div class="ranking-scroll" role="region" aria-label="Classificação de vendas por consultora" tabindex="0">
       <table class="sales-ranking">
         <colgroup><col class="sales-ranking__seller"><col><col class="sales-ranking__total"><col class="sales-ranking__goal"></colgroup>
         <thead><tr><th>Vendedora</th><th>Vendas</th><th>Receita</th><th>Meta</th></tr></thead>
@@ -153,16 +153,17 @@ const totalSalesLabel = totalSalesLabels[dashboard.range.period] || 'Vendas tota
               <div class="dashboard-gauge__no-target">Sem meta geral</div>
             <% } %>
             <% if (gauge.goals.length) { %>
-              <div class="dashboard-gauge__goals" aria-label="Metas <%= label.toLowerCase() %>">
-                <% gauge.goals.forEach((goal, index) => { const goalLabel = goal.type === 'general' ? 'Grupo' : goal.seller_name || 'Vendedora #' + goal.seller_id; %>
-                  <% if (index === 3) { %><details class="dashboard-gauge__more"><summary>Ver mais <%= gauge.goals.length - 3 %> <%= gauge.goals.length === 4 ? 'meta' : 'metas' %></summary><% } %>
-                  <div class="dashboard-gauge__goal">
-                    <div class="dashboard-gauge__goal-line"><span class="dashboard-gauge__goal-name" title="<%= goalLabel %> — meta #<%= goal.id %>"><%= goalLabel %></span><span class="dashboard-gauge__goal-values"><strong><%= brl(goal.realized) %></strong> / <%= target(goal.target) %></span></div>
-                    <% if (goal.percent != null) { %><div class="dashboard-gauge__goal-progress"><progress max="100" value="<%= Math.max(0, Math.min(100, goal.percent)) %>" aria-label="Progresso de <%= goalLabel %>, meta #<%= goal.id %>"><%= goal.percent.toFixed(2) %>%</progress><small><%= goal.percent.toFixed(2) %>%</small></div><% } %>
-                  </div>
-                <% }) %>
-                <% if (gauge.goals.length > 3) { %></details><% } %>
-              </div>
+              <details class="dashboard-gauge__more">
+                <summary>Ver <%= gauge.goals.length %> <%= gauge.goals.length === 1 ? 'meta' : 'metas' %></summary>
+                <div class="dashboard-gauge__goals" aria-label="Metas <%= label.toLowerCase() %>">
+                  <% gauge.goals.forEach((goal) => { const goalLabel = goal.type === 'general' ? 'Grupo' : goal.seller_name || 'Vendedora #' + goal.seller_id; %>
+                    <div class="dashboard-gauge__goal">
+                      <div class="dashboard-gauge__goal-line"><span class="dashboard-gauge__goal-name" title="<%= goalLabel %> — meta #<%= goal.id %>"><%= goalLabel %></span><span class="dashboard-gauge__goal-values"><strong><%= brl(goal.realized) %></strong> / <%= target(goal.target) %></span></div>
+                      <% if (goal.percent != null) { %><div class="dashboard-gauge__goal-progress"><progress max="100" value="<%= Math.max(0, Math.min(100, goal.percent)) %>" aria-label="Progresso de <%= goalLabel %>, meta #<%= goal.id %>"><%= goal.percent.toFixed(2) %>%</progress><small><%= goal.percent.toFixed(2) %>%</small></div><% } %>
+                    </div>
+                  <% }) %>
+                </div>
+              </details>
             <% } else { %><p class="dashboard-gauge__empty">Nenhuma meta no período.</p><% } %>
           </div>
         <% }) %>

@@ -596,7 +596,8 @@
   gap: 8px;
 }
 .ranking-motion-control {
-  padding: 3px 9px;
+  min-height: 28px;
+  padding: 2px 8px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 7px;
   background: #334565;
@@ -1683,7 +1684,7 @@
     display: grid;
     height: 100%;
     min-height: 0;
-    grid-template-rows: 218px minmax(0, 1fr) 154px;
+    grid-template-rows: 218px minmax(0, 1fr) 180px;
     gap: 6px;
   }
   .sales-dashboard__top {
@@ -1809,8 +1810,8 @@
   .ranking-motion-control { font-size: 0.8rem; }
   .sales-results .sales-ranking td,
   .sales-ranking__leader td {
-    height: 60px !important;
-    padding: 6px 12px;
+    height: 56px !important;
+    padding: 4px 12px;
   }
   .sales-ranking__goal-item {
     display: flex;
@@ -1864,43 +1865,55 @@
   }
   .period-countdown,
   .dashboard-performance { padding: 7px 9px; }
+  .dashboard-performance {
+    display: flex;
+    flex-direction: column;
+  }
   .period-countdown__box {
     min-height: 0;
     padding: 5px;
     border-radius: 10px;
   }
   .period-countdown__box b { margin: 3px 0; }
-  .sales-dashboard .period-countdown__box b { font-size: 1.45rem; }
-  .sales-dashboard .period-countdown__box strong { font-size: 0.75rem; }
-  .sales-dashboard .period-countdown__box small { font-size: 0.62rem; }
+  .sales-dashboard .period-countdown__box b { font-size: 1.9rem; }
+  .sales-dashboard .period-countdown__box strong { font-size: 0.85rem; }
+  .sales-dashboard .period-countdown__box small { font-size: 0.7rem; }
   .dashboard-performance__metrics {
     gap: 5px;
     margin-top: 4px;
   }
   .dashboard-performance__metrics > span {
-    min-height: 32px;
+    min-height: 40px;
     padding: 3px 7px;
   }
   .dashboard-gauges {
+    flex: 1;
+    min-height: 0;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 6px;
     margin-top: 4px;
   }
   .dashboard-gauge {
+    display: flex;
+    flex-direction: column;
     min-height: 0;
     padding: 4px 7px;
   }
   .sales-dashboard .dashboard-gauge > strong { font-size: 0.82rem; }
-  .dashboard-gauge__summary { min-height: 0; gap: 3px; }
-  .dashboard-gauge svg {
-    flex-basis: 50px;
-    width: 50px;
-    height: 28px;
+  .dashboard-gauge__summary {
+    flex: 1;
+    min-height: 0;
+    gap: 3px;
   }
-  .sales-dashboard .dashboard-gauge text { font-size: 14px; }
+  .dashboard-gauge svg {
+    flex-basis: 68px;
+    width: 68px;
+    height: 38px;
+  }
+  .sales-dashboard .dashboard-gauge text { font-size: 16px; }
   .dashboard-gauge__summary > span { flex-basis: 75px; gap: 0; }
-  .dashboard-gauge__summary small { font-size: 0.56rem; }
-  .dashboard-gauge__summary b { font-size: 0.7rem; }
+  .dashboard-gauge__summary small { font-size: 0.65rem; }
+  .dashboard-gauge__summary b { font-size: 0.8rem; }
   .dashboard-gauge__no-target {
     min-height: 17px;
     font-size: 0.66rem;
@@ -1929,7 +1942,7 @@
     height: auto;
     grid-template-rows: 218px minmax(320px, auto) auto;
   }
-  .sales-dashboard__bottom:has(.dashboard-gauge__more[open]) { min-height: 154px; }
+  .sales-dashboard__bottom:has(.dashboard-gauge__more[open]) { min-height: 180px; }
   .dashboard-performance:has(.dashboard-gauge__more[open]) { overflow: visible; }
   .dashboard-gauge__more[open] { position: static; }
 }

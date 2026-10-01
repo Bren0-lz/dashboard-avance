@@ -470,6 +470,15 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
   }
+  .sales-goal-filters__grid label,
+  .filter-panel--goals label {
+    min-width: 0;
+  }
+  [data-goal-options-feedback] {
+    color: #60718c;
+    font-size: 0.78rem;
+    font-weight: 400;
+  }
   .filter-actions {
     display: flex;
     align-items: flex-end;

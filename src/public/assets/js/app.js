@@ -13,6 +13,7 @@ document.addEventListener("click", (event) => {
   const open = !panel.classList.contains("is-open");
   panel.classList.toggle("is-open", open);
   button.setAttribute("aria-expanded", String(open));
+  button.textContent = open ? "Ocultar filtros" : "Mostrar filtros";
   if (open) panel.querySelector("input,select")?.focus();
 });
 document.querySelectorAll("form").forEach((form) =>

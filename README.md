@@ -106,7 +106,7 @@ Listas aceitam `page` e `page_size` (máximo 100). `GET /api/v1/dashboard/events
 
 `POST /api/v1/goals` aceita `seller_ids` como lista para criar metas individuais de mesmo valor e período em uma única transação; `seller_id` continua aceito para criação individual. A resposta inclui `id` e `ids` dos registros criados.
 
-`GET /api/v1/sales` aceita `goal_status` (`participated`, `none`, `in_progress`, `reached` ou `missed`), `goal_type` (`general` ou `individual`) e `goal_id`. Os três filtros são combinados sobre a mesma meta participante antes da paginação; `none` não pode ser combinado com tipo ou ID.
+`GET /api/v1/sales` aceita `goal_status` (`participated`, `none`, `in_progress`, `reached` ou `missed`), `goal_type` (`general` ou `individual`), `goal_seller_id`, `goal_period_id`, `goal_start_date`, `goal_end_date` e `goal_id`. Os critérios são combinados sobre a mesma meta participante antes da paginação; `none` não pode ser combinado com os demais filtros de meta. As datas da meta filtram por sobreposição de vigência, inclusive no histórico arquivado.
 
 ## Integracao CRM
 

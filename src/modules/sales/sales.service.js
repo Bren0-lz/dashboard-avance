@@ -67,22 +67,31 @@ function parseGoalFilters(filters) {
   const status = read("goal_status");
   const type = read("goal_type");
   const id = read("goal_id");
+  const sellerId = read("goal_seller_id");
+  const periodId = read("goal_period_id");
+  const startDate = read("goal_start_date");
+  const endDate = read("goal_end_date");
+  const validId = (value) => !value || (/^[1-9]\d*$/.test(value) && Number.isSafeInteger(Number(value)));
+  const validDate = (value) => !value || /^\d{4}-\d{2}-\d{2}$/.test(value);
   if (!["", "all", "participated", "none", "in_progress", "reached", "missed"].includes(status) ||
     !["", "general", "individual"].includes(type) ||
-    (id && (!/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(Number(id)))))
+    ![id, sellerId, periodId].every(validId) || ![startDate, endDate].every(validDate) ||
+    (startDate && endDate && startDate > endDate))
     throw new AppError(422, "INVALID_GOAL_FILTER", "Filtro de metas inválido.");
-  if (status === "none" && (type || id))
-    throw new AppError(422, "INVALID_GOAL_FILTER", "Não combine 'Não participou' com tipo ou meta específica.");
-  return { status: status === "all" ? "" : status, type, id: id ? Number(id) : null };
+  if (status === "none" && (type || id || sellerId || periodId || startDate || endDate))
+    throw new AppError(422, "INVALID_GOAL_FILTER", "Não combine 'Não participou' com outros filtros de meta.");
+  return { status: status === "all" ? "" : status, type, id: id ? Number(id) : null,
+    sellerId: sellerId ? Number(sellerId) : null, periodId: periodId ? Number(periodId) : null,
+    startDate, endDate };
 }
 
 function applyGoalFilters(db, query, filters) {
-  const { status, type, id } = parseGoalFilters(filters);
-  if (!status && !type && !id) return query;
+  const { status, type, id, sellerId, periodId, startDate, endDate } = parseGoalFilters(filters);
+  if (!status && !type && !id && !sellerId && !periodId && !startDate && !endDate) return query;
   const linkedSale = () => db("sale_goal_participations as linked")
     .select(db.raw("1")).whereRaw("linked.sale_id = sales.id");
   if (status === "none") return query.whereNotExists(linkedSale());
-  if (status === "participated" && !type && !id)
+  if (status === "participated" && !type && !id && !sellerId && !periodId && !startDate && !endDate)
     return query.whereExists(linkedSale());
 
   const goals = db("goals as g")
@@ -91,6 +100,10 @@ function applyGoalFilters(db, query, filters) {
     .where((scope) => scope.whereNull("g.deleted_at").orWhereNotNull("a.goal_id"));
   if (type) goals.whereRaw("COALESCE(a.goal_type, g.goal_type) = ?", [type]);
   if (id) goals.where("g.id", id);
+  if (sellerId) goals.whereRaw("COALESCE(a.seller_id, g.seller_id) = ?", [sellerId]);
+  if (periodId) goals.whereRaw("COALESCE(a.goal_period_id, g.goal_period_id) = ?", [periodId]);
+  if (startDate) goals.whereRaw("COALESCE(a.end_date, g.end_date) >= ?", [startDate]);
+  if (endDate) goals.whereRaw("COALESCE(a.start_date, g.start_date) <= ?", [endDate]);
   const today = commercialToday();
   if (status === "in_progress")
     goals.whereRaw("COALESCE(a.end_date, g.end_date) >= ?", [today]);
@@ -131,7 +144,13 @@ async function listGoalFilterOptions(db) {
     return {
       id: row.id,
       type,
-      label: `#${row.id} — ${type === "general" ? "Em grupo" : sellerNames.get(String(sellerId)) || `Vendedora #${sellerId}`} — ${periodNames.get(String(periodId)) || "Período"} (${start} a ${end})`,
+      sellerId: sellerId || "",
+      sellerName: sellerId ? sellerNames.get(String(sellerId)) || `Vendedora #${sellerId}` : "",
+      periodId,
+      periodName: periodNames.get(String(periodId)) || "Período",
+      start,
+      end,
+      label: `#${row.id} — ${type === "general" ? "Em grupo" : sellerNames.get(String(sellerId)) || `Vendedora #${sellerId}`} — ${periodNames.get(String(periodId)) || "Período"} (${start.split("-").reverse().join("/")} a ${end.split("-").reverse().join("/")})`,
     };
   });
 }

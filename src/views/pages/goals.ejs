@@ -3,6 +3,8 @@ const isForm = currentUser.role === 'admin' && (edit || query.tab === 'form');
 const goal = edit || {};
 const brl = (value) => Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const selected = (actual, expected) => String(actual ?? '') === String(expected) ? 'selected' : '';
+const goalSellers = [...new Map(goalOptions.filter((item) => item.sellerId).map((item) => [String(item.sellerId), item.sellerName])).entries()].sort((a,b) => a[1].localeCompare(b[1], 'pt-BR'));
+const goalPeriods = [...new Map(goalOptions.map((item) => [String(item.periodId), item.periodName])).entries()].sort((a,b) => a[1].localeCompare(b[1], 'pt-BR'));
 %>
 <header class="page-header">
   <div>
@@ -111,23 +113,29 @@ const selected = (actual, expected) => String(actual ?? '') === String(expected)
             <option value="individual" <%= selected(query.goal_type, 'individual') %>>Meta individual</option>
           </select>
         </label>
-        <label for="filter-goal-period">Per&iacute;odo
-          <select id="filter-goal-period" name="goal_period_id">
-            <option value="">Todos</option>
-            <% refs.periods.forEach((period) => { %><option value="<%= period.id %>" <%= selected(query.goal_period_id, period.id) %>><%= period.name %></option><% }) %>
-          </select>
-        </label>
-        <label for="filter-goal-seller">Vendedora
+        <label for="filter-goal-seller">Vendedora da meta
           <select id="filter-goal-seller" name="seller_id">
             <option value="">Todas</option>
-            <% refs.sellers.forEach((seller) => { %><option value="<%= seller.id %>" <%= selected(query.seller_id, seller.id) %>><%= seller.full_name %></option><% }) %>
+            <% goalSellers.forEach(([id, name]) => { %><option value="<%= id %>" <%= selected(query.seller_id, id) %>><%= name %></option><% }) %>
           </select>
         </label>
-        <label for="filter-goal-start">Data Inicial
+        <label for="filter-goal-period">Periodicidade
+          <select id="filter-goal-period" name="goal_period_id">
+            <option value="">Todas</option>
+            <% goalPeriods.forEach(([id, name]) => { %><option value="<%= id %>" <%= selected(query.goal_period_id, id) %>><%= name %></option><% }) %>
+          </select>
+        </label>
+        <label for="filter-goal-start">Meta vigente a partir de
           <input id="filter-goal-start" type="date" name="start_date" value="<%= query.start_date || '' %>">
         </label>
-        <label for="filter-goal-end">Data Final
+        <label for="filter-goal-end">Meta vigente até
           <input id="filter-goal-end" type="date" name="end_date" value="<%= query.end_date || '' %>">
+        </label>
+        <label>Meta específica
+          <select name="goal_id" aria-describedby="goal-options-feedback">
+            <option value="">Todas as metas</option>
+            <% goalOptions.forEach((item) => { %><option value="<%=item.id%>" data-goal-type="<%=item.type%>" data-seller-id="<%=item.sellerId%>" data-period-id="<%=item.periodId%>" data-start="<%=item.start%>" data-end="<%=item.end%>" <%=selected(query.goal_id,item.id)%>><%=item.label%></option><% }) %>
+          </select><small id="goal-options-feedback" data-goal-options-feedback aria-live="polite"></small>
         </label>
         <div class="filter-actions">
           <a class="button button-ghost" href="/goals">Limpar</a>

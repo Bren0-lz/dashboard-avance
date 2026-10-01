@@ -1,4 +1,4 @@
-<% const isForm = currentUser.role !== 'viewer' && (edit || query.tab === 'form'); const sale = (typeof draft !== 'undefined' && draft) || edit || {}; const errors = (typeof fieldErrors !== 'undefined' && fieldErrors) || {}; const hasFormError = typeof formError !== 'undefined' && formError; const selected = (value,current) => String(value) === String(current); const hasSalesFilters = ['search','start_date','end_date','shift','has_doc','is_base_sale','goal_status','goal_type','goal_id'].some((key) => query[key] !== '' && query[key] !== null && typeof query[key] !== 'undefined'); const salesPageUrl = (pageNumber) => { const params = Object.entries(query).filter(([key, value]) => key !== 'page' && key !== 'tab' && value !== '' && value !== null && typeof value !== 'undefined'); params.push(['page', pageNumber]); const search = params.map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join('&'); return `/sales?${search}`; }; const currentPage = result?.pagination?.page || 1; const totalPages = result?.pagination?.pages || 1; const firstVisiblePage = Math.max(1, Math.min(currentPage - 2, totalPages - 4)); const lastVisiblePage = Math.min(totalPages, firstVisiblePage + 4); %>
+<% const isForm = currentUser.role !== 'viewer' && (edit || query.tab === 'form'); const sale = (typeof draft !== 'undefined' && draft) || edit || {}; const errors = (typeof fieldErrors !== 'undefined' && fieldErrors) || {}; const hasFormError = typeof formError !== 'undefined' && formError; const selected = (value,current) => String(value) === String(current); const hasSalesFilters = ['search','start_date','end_date','shift','has_doc','is_base_sale','goal_status','goal_type','goal_seller_id','goal_period_id','goal_start_date','goal_end_date','goal_id'].some((key) => query[key] !== '' && query[key] !== null && typeof query[key] !== 'undefined'); const goalSellers = [...new Map(goalOptions.filter((goal) => goal.sellerId).map((goal) => [String(goal.sellerId), goal.sellerName])).entries()].sort((a,b) => a[1].localeCompare(b[1], 'pt-BR')); const goalPeriods = [...new Map(goalOptions.map((goal) => [String(goal.periodId), goal.periodName])).entries()].sort((a,b) => a[1].localeCompare(b[1], 'pt-BR')); const salesPageUrl = (pageNumber) => { const params = Object.entries(query).filter(([key, value]) => key !== 'page' && key !== 'tab' && value !== '' && value !== null && typeof value !== 'undefined'); params.push(['page', pageNumber]); const search = params.map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join('&'); return `/sales?${search}`; }; const currentPage = result?.pagination?.page || 1; const totalPages = result?.pagination?.pages || 1; const firstVisiblePage = Math.max(1, Math.min(currentPage - 2, totalPages - 4)); const lastVisiblePage = Math.min(totalPages, firstVisiblePage + 4); %>
 <header class="page-header"><div><h1>Vendas</h1><p>Cadastre, visualize e gerencie as vendas do sistema.</p></div></header>
 <section class="admin-card management-hub sales-hub">
   <div class="tabs" role="tablist" aria-label="Seções de vendas"><a role="tab" aria-selected="<%= !isForm %>" tabindex="<%= !isForm ? 0 : -1 %>" class="tab <%= !isForm ? 'is-active' : '' %>" href="/sales">Lista de Vendas</a><% if(currentUser.role !== 'viewer'){%><a role="tab" aria-selected="<%= isForm %>" tabindex="<%= isForm ? 0 : -1 %>" class="tab <%= isForm ? 'is-active' : '' %>" href="/sales?tab=form"><%= edit ? 'Editar' : 'Cadastrar' %> Venda</a><%}%></div>
@@ -10,11 +10,11 @@
       <label>Possui Documento?<select name="has_doc"><option value="false" <%=sale.id&&!sale.has_doc?'selected':''%>>Não</option><option value="true" <%=sale.has_doc?'selected':''%>>Sim</option></select></label><label>Origem do Cliente<select name="is_base_sale"><option value="false" <%=sale.id&&!sale.is_base_sale?'selected':''%>>Fora da base</option><option value="true" <%=sale.is_base_sale?'selected':''%>>Da base</option></select></label><label>Quantidade<input id="quantity" type="number" min="1" step="1" name="quantity" required value="<%=sale.quantity||1%>"></label><label>Valor Unitário<input id="unit-value" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00" name="unit_value" required value="<%=sale.unit_value||''%>"></label><label>Valor Total<input id="total-value" readonly value="<%=sale.total_value||''%>"></label>
       <div class="form-actions"><a class="button button-secondary" href="/sales">Cancelar</a><button type="submit">Salvar</button></div>
     </form></section>
-  <%}else{%><section role="tabpanel" class="list-panel"><div class="section-heading"><div><h2>Lista de Vendas</h2><p>Gerencie os registros cadastrados.</p></div><button class="button button-secondary filter-toggle" type="button" aria-expanded="<%=hasSalesFilters%>" aria-controls="sales-filters">Mostrar filtros</button></div>
+  <%}else{%><section role="tabpanel" class="list-panel"><div class="section-heading"><div><h2>Lista de Vendas</h2><p>Gerencie os registros cadastrados.</p></div><button class="button button-secondary filter-toggle" type="button" aria-expanded="<%=hasSalesFilters%>" aria-controls="sales-filters"><%=hasSalesFilters?'Ocultar filtros':'Mostrar filtros'%></button></div>
     <form id="sales-filters" method="get" class="filter-panel filter-panel--sales <%=hasSalesFilters?'is-open':''%>">
       <label>Busca<input name="search" value="<%=query.search||''%>"></label>
-      <label>Início<input type="date" name="start_date" value="<%=query.start_date||''%>"></label>
-      <label>Fim<input type="date" name="end_date" value="<%=query.end_date||''%>"></label>
+      <label>Venda a partir de<input type="date" name="start_date" value="<%=query.start_date||''%>"></label>
+      <label>Venda até<input type="date" name="end_date" value="<%=query.end_date||''%>"></label>
       <label>Turno<select name="shift"><option value="">Todos</option><option value="morning" <%=query.shift==='morning'?'selected':''%>>Manhã</option><option value="afternoon" <%=query.shift==='afternoon'?'selected':''%>>Tarde</option></select></label>
       <label>Documento<select name="has_doc"><option value="">Todos</option><option value="true" <%=query.has_doc==='true'?'selected':''%>>Com</option><option value="false" <%=query.has_doc==='false'?'selected':''%>>Sem</option></select></label>
       <label>Origem<select name="is_base_sale"><option value="">Todas</option><option value="true" <%=query.is_base_sale==='true'?'selected':''%>>Base</option><option value="false" <%=query.is_base_sale==='false'?'selected':''%>>Fora</option></select></label>
@@ -34,10 +34,20 @@
             <option value="general" <%=selected(query.goal_type,'general')?'selected':''%>>Em grupo</option>
             <option value="individual" <%=selected(query.goal_type,'individual')?'selected':''%>>Individual</option>
           </select></label>
-          <label>Meta específica<select name="goal_id" id="sales-goal-id">
-            <option value="">Todas as metas</option>
-            <% goalOptions.forEach((goal) => { %><option value="<%=goal.id%>" data-goal-type="<%=goal.type%>" <%=selected(query.goal_id,goal.id)?'selected':''%>><%=goal.label%></option><% }) %>
+          <label>Vendedora da meta<select name="goal_seller_id">
+            <option value="">Todas</option>
+            <% goalSellers.forEach(([id, name]) => { %><option value="<%=id%>" <%=selected(query.goal_seller_id,id)?'selected':''%>><%=name%></option><% }) %>
           </select></label>
+          <label>Periodicidade<select name="goal_period_id">
+            <option value="">Todas</option>
+            <% goalPeriods.forEach(([id, name]) => { %><option value="<%=id%>" <%=selected(query.goal_period_id,id)?'selected':''%>><%=name%></option><% }) %>
+          </select></label>
+          <label>Meta vigente a partir de<input type="date" name="goal_start_date" value="<%=query.goal_start_date||''%>"></label>
+          <label>Meta vigente até<input type="date" name="goal_end_date" value="<%=query.goal_end_date||''%>"></label>
+          <label>Meta específica<select name="goal_id" id="sales-goal-id" aria-describedby="sales-goal-options-feedback">
+            <option value="">Todas as metas</option>
+            <% goalOptions.forEach((goal) => { %><option value="<%=goal.id%>" data-goal-type="<%=goal.type%>" data-seller-id="<%=goal.sellerId%>" data-period-id="<%=goal.periodId%>" data-start="<%=goal.start%>" data-end="<%=goal.end%>" <%=selected(query.goal_id,goal.id)?'selected':''%>><%=goal.label%></option><% }) %>
+          </select><small id="sales-goal-options-feedback" data-goal-options-feedback aria-live="polite"></small></label>
         </div>
       </fieldset>
       <div class="filter-actions"><a class="button button-ghost" href="/sales">Limpar</a><button type="submit">Filtrar</button></div>
@@ -54,4 +64,4 @@
       </div>
     </nav>
   </section><%}%>
-</section><script src="/assets/js/sale-form.js?v=20260805-1" defer></script><script src="/assets/js/sales-goal-filters.js?v=20260924-1" defer></script>
+</section><script src="/assets/js/sale-form.js?v=20260805-1" defer></script>

@@ -17,15 +17,17 @@ function creationInputs(body) {
 }
 async function render(db, req, res) {
   const edit = req.params.id ? await service.getGoal(db, req.params.id) : null;
-  const [result, refs] = await Promise.all([
+  const [result, refs, goalOptions] = await Promise.all([
     service.listGoals(db, req.query),
     service.references(db, edit),
+    service.listGoalFilterOptions(db),
   ]);
   res.render("layouts/main", {
     title: "Metas",
     page: "pages/goals",
     result,
     refs,
+    goalOptions,
     edit,
     query: req.query,
   });

@@ -27,11 +27,4 @@
     });
     sync();
   }
-  const filterToggle = document.querySelector('[aria-controls="goal-filters"]');
-  filterToggle?.addEventListener("click", () => {
-    requestAnimationFrame(() => {
-      filterToggle.textContent = filterToggle.getAttribute("aria-expanded") === "true"
-        ? "Ocultar filtros" : "Mostrar filtros";
-    });
-  });
 })();

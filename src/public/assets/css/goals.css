@@ -136,7 +136,7 @@
   padding-top: 0;
 }
 .filter-panel--goals {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .filter-panel--goals .filter-actions {
   grid-column: 1/-1;

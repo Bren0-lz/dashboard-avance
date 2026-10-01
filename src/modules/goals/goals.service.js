@@ -5,6 +5,11 @@ const { moneyColumns } = require("./goals.schema");
 const { archiveFinishedGoal, syncGoalParticipations, commercialToday } = require("./goal-accounting");
 
 async function listGoals(db, filters = {}) {
+  if (filters.goal_id && (typeof filters.goal_id !== "string" ||
+    !/^[1-9]\d*$/.test(filters.goal_id) || !Number.isSafeInteger(Number(filters.goal_id))))
+    throw new AppError(422, "INVALID_GOAL_FILTER", "Meta específica inválida.");
+  if (filters.start_date && filters.end_date && filters.start_date > filters.end_date)
+    throw new AppError(422, "INVALID_GOAL_FILTER", "A data final deve ser igual ou posterior à inicial.");
   const page = Math.max(1, Number(filters.page) || 1),
     pageSize = Math.min(100, Math.max(1, Number(filters.page_size) || 25));
   const base = db("goals")
@@ -15,6 +20,7 @@ async function listGoals(db, filters = {}) {
     base.where("goals.goal_period_id", filters.goal_period_id);
   if (filters.goal_type) base.where("goals.goal_type", filters.goal_type);
   if (filters.seller_id) base.where("goals.seller_id", filters.seller_id);
+  if (filters.goal_id) base.where("goals.id", filters.goal_id);
   if (filters.start_date)
     base.where("goals.end_date", ">=", filters.start_date);
   if (filters.end_date) base.where("goals.start_date", "<=", filters.end_date);
@@ -44,6 +50,26 @@ async function listGoals(db, filters = {}) {
       pages: Math.max(1, Math.ceil(total / pageSize)),
     },
   };
+}
+async function listGoalFilterOptions(db) {
+  const rows = await db("goals")
+    .join("goal_periods", "goal_periods.id", "goals.goal_period_id")
+    .leftJoin("sellers", "sellers.id", "goals.seller_id")
+    .whereNull("goals.deleted_at")
+    .select("goals.id", "goals.goal_type", "goals.seller_id", "goals.goal_period_id",
+      "goals.start_date", "goals.end_date", "goal_periods.name as period_name", "sellers.full_name as seller_name")
+    .orderBy("goals.start_date", "desc");
+  return rows.map((row) => ({
+    id: row.id,
+    type: row.goal_type,
+    sellerId: row.seller_id || "",
+    sellerName: row.seller_name || (row.seller_id ? `Vendedora #${row.seller_id}` : ""),
+    periodId: row.goal_period_id,
+    periodName: row.period_name,
+    start: String(row.start_date).slice(0, 10),
+    end: String(row.end_date).slice(0, 10),
+    label: `#${row.id} — ${row.goal_type === "general" ? "Em grupo" : row.seller_name || `Vendedora #${row.seller_id}`} — ${row.period_name} (${String(row.start_date).slice(0, 10).split("-").reverse().join("/")} a ${String(row.end_date).slice(0, 10).split("-").reverse().join("/")})`,
+  }));
 }
 async function getGoal(db, id) {
   const row = await db("goals").where({ id }).whereNull("deleted_at").first();
@@ -168,4 +194,4 @@ async function references(db, current) {
       .orderBy("full_name"),
   };
 }
-module.exports = { listGoals, getGoal, saveGoal, createGoals, deleteGoal, references };
+module.exports = { listGoals, listGoalFilterOptions, getGoal, saveGoal, createGoals, deleteGoal, references };

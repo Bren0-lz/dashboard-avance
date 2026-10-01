@@ -589,6 +589,27 @@
   outline: 2px solid #fbbf24;
   outline-offset: 2px;
 }
+.sales-ranking__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ranking-motion-control {
+  padding: 3px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 7px;
+  background: #334565;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ranking-motion-control[hidden] { display: none; }
+.ranking-motion-control:focus-visible {
+  outline: 2px solid #fbbf24;
+  outline-offset: 2px;
+}
 .sales-ranking {
   width: 100%;
   table-layout: fixed;
@@ -1649,19 +1670,21 @@
   }
   .theme-dashboard .navbar {
     flex: 0 0 auto;
+    min-height: 64px;
+    padding-block: 7px;
   }
   .theme-dashboard .page-main {
     flex: 1 1 auto;
     min-height: 0;
-    padding: 10px 24px 12px;
+    padding: 6px 24px 8px;
     overflow: hidden;
   }
   .sales-dashboard {
     display: grid;
     height: 100%;
     min-height: 0;
-    grid-template-rows: 212px minmax(0, 1fr) 154px;
-    gap: 8px;
+    grid-template-rows: 218px minmax(0, 1fr) 154px;
+    gap: 6px;
   }
   .sales-dashboard__top {
     grid-template-columns: repeat(16, minmax(0, 1fr));
@@ -1719,8 +1742,8 @@
   .shift-kpi__total small,
   .shift-kpi__goal small { margin-bottom: 1px; }
   .sales-dashboard .shift-kpi__documents strong,
-  .sales-dashboard .shift-kpi__total strong { font-size: 1rem; }
-  .sales-dashboard .shift-kpi__goal strong { font-size: 0.83rem; }
+  .sales-dashboard .shift-kpi__total strong { font-size: 1.1rem; }
+  .sales-dashboard .shift-kpi__goal strong { font-size: 0.92rem; }
   .sales-dashboard .shift-kpi__goal small {
     font-size: 0.58rem;
     white-space: nowrap;
@@ -1776,16 +1799,18 @@
     overflow: auto;
     scrollbar-color: #8b91a4 #101827;
   }
+  .sales-ranking__seller { width: 360px; }
   .sales-ranking thead th {
     position: sticky;
     top: 0;
     z-index: 1;
     padding: 6px 10px;
   }
+  .ranking-motion-control { font-size: 0.8rem; }
   .sales-results .sales-ranking td,
   .sales-ranking__leader td {
-    height: 47px !important;
-    padding: 4px 10px;
+    height: 60px !important;
+    padding: 6px 12px;
   }
   .sales-ranking__goal-item {
     display: flex;
@@ -1793,26 +1818,31 @@
     justify-content: center;
     gap: 5px;
     padding: 0;
-    font-size: 0.66rem;
+    font-size: 0.73rem;
   }
   .sales-ranking__goal-item + .sales-ranking__goal-item {
     margin-top: 1px;
     padding-top: 0;
     border: 0;
   }
-  .sales-ranking__goal-item b { font-size: 0.66rem; }
-  .sales-results .seller-cell > strong,
-  .sales-results .sales-ranking__leader .seller-cell > strong {
-    font-size: 1rem;
+  .sales-ranking__goal-item b { font-size: 0.73rem; }
+  .sales-results .seller-cell > strong {
+    font-size: 1.25rem;
     line-height: 1.1;
   }
+  .sales-results .sales-ranking__leader .seller-cell > strong {
+    font-size: 1.4rem;
+    line-height: 1.1;
+  }
+  .sales-results .sales-ranking td:nth-last-child(2) > strong { font-size: 1.35rem; }
+  .sales-results .sales-ranking__leader td:nth-last-child(2) > strong { font-size: 1.45rem; }
   .sales-ranking__leader .seller-rank {
-    width: 29px;
-    height: 29px;
+    width: 34px;
+    height: 34px;
   }
   .sales-ranking__leader .seller-rank img {
-    width: 23px;
-    height: 23px;
+    width: 27px;
+    height: 27px;
   }
   .sales-results .sale-chip {
     padding: 3px 5px;
@@ -1821,8 +1851,8 @@
   .sales-results .sale-chip img,
   .sales-results .sale-chip__fallback,
   .sales-results .sale-chip__shift {
-    width: 21px;
-    height: 21px;
+    width: 24px;
+    height: 24px;
   }
   .sale-chip-strip { padding-bottom: 2px; }
   .sales-results .dashboard-empty { min-height: 65px; }
@@ -1897,7 +1927,7 @@
   .theme-dashboard:has(.dashboard-gauge__more[open]) .page-main { overflow: visible; }
   .sales-dashboard:has(.dashboard-gauge__more[open]) {
     height: auto;
-    grid-template-rows: 212px minmax(320px, auto) auto;
+    grid-template-rows: 218px minmax(320px, auto) auto;
   }
   .sales-dashboard__bottom:has(.dashboard-gauge__more[open]) { min-height: 154px; }
   .dashboard-performance:has(.dashboard-gauge__more[open]) { overflow: visible; }

@@ -138,3 +138,106 @@ for (const [chartIndex, chart] of document
     });
   });
 }
+
+const rankingScroll = document.querySelector(".ranking-scroll");
+const rankingMotionControl = document.querySelector("#ranking-motion-control");
+
+if (rankingScroll && rankingMotionControl) {
+  const desktop = window.matchMedia("(min-width: 1280px) and (min-height: 700px)");
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const speed = 12;
+  const edgePauseMs = 3000;
+  const manualPauseMs = 10000;
+  let userPaused = reducedMotion.matches;
+  let pointerOverContent = false;
+  let holdUntil = 0;
+  let direction = 1;
+  let lastFrame;
+  let wasScrollable = false;
+
+  const updateControl = (scrollable) => {
+    rankingMotionControl.hidden = !scrollable;
+    rankingMotionControl.textContent = userPaused ? "Retomar" : "Pausar";
+    rankingMotionControl.setAttribute("aria-pressed", String(userPaused));
+    rankingMotionControl.setAttribute(
+      "aria-label",
+      userPaused
+        ? "Retomar movimento automático do ranking"
+        : "Pausar movimento automático do ranking",
+    );
+  };
+
+  const pauseForManualInput = (event) => {
+    if (event.target === rankingMotionControl) return;
+    holdUntil = performance.now() + manualPauseMs;
+  };
+
+  rankingScroll.addEventListener("pointermove", (event) => {
+    pointerOverContent = event.target !== rankingMotionControl;
+  });
+  rankingScroll.addEventListener("pointerleave", () => {
+    pointerOverContent = false;
+  });
+  for (const eventName of ["pointerup", "pointercancel"]) {
+    rankingScroll.addEventListener(eventName, (event) => {
+      if (event.pointerType === "touch") pointerOverContent = false;
+    });
+  }
+  rankingScroll.addEventListener("pointerdown", pauseForManualInput);
+  rankingScroll.addEventListener("wheel", pauseForManualInput, { passive: true });
+  rankingScroll.addEventListener("touchstart", pauseForManualInput, { passive: true });
+  rankingScroll.addEventListener("keydown", pauseForManualInput);
+
+  rankingMotionControl.addEventListener("click", () => {
+    userPaused = !userPaused;
+    pointerOverContent = false;
+    if (!userPaused) holdUntil = performance.now();
+    updateControl(wasScrollable);
+  });
+  reducedMotion.addEventListener("change", () => {
+    if (reducedMotion.matches) userPaused = true;
+    updateControl(wasScrollable);
+  });
+
+  const advanceRanking = (timestamp) => {
+    const elapsed = lastFrame == null ? 0 : Math.min(timestamp - lastFrame, 100);
+    lastFrame = timestamp;
+    const maxScroll = Math.max(0, rankingScroll.scrollHeight - rankingScroll.clientHeight);
+    const scrollable = desktop.matches && maxScroll > 1;
+
+    if (scrollable !== wasScrollable) {
+      wasScrollable = scrollable;
+      if (scrollable) holdUntil = timestamp + edgePauseMs;
+      updateControl(scrollable);
+    }
+
+    const focusInRanking =
+      rankingScroll.contains(document.activeElement) &&
+      document.activeElement !== rankingMotionControl;
+    if (
+      scrollable &&
+      !userPaused &&
+      !pointerOverContent &&
+      !focusInRanking &&
+      document.visibilityState === "visible" &&
+      timestamp >= holdUntil
+    ) {
+      const next = rankingScroll.scrollTop + direction * speed * elapsed / 1000;
+      if (next >= maxScroll - 0.5) {
+        rankingScroll.scrollTop = maxScroll;
+        direction = -1;
+        holdUntil = timestamp + edgePauseMs;
+      } else if (next <= 0.5) {
+        rankingScroll.scrollTop = 0;
+        direction = 1;
+        holdUntil = timestamp + edgePauseMs;
+      } else {
+        rankingScroll.scrollTop = next;
+      }
+    }
+
+    window.requestAnimationFrame(advanceRanking);
+  };
+
+  window.requestAnimationFrame(advanceRanking);
+}

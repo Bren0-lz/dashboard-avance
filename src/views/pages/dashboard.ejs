@@ -94,7 +94,7 @@ const totalSalesLabel = totalSalesLabels[dashboard.range.period] || 'Vendas tota
     <div class="ranking-scroll" role="region" aria-label="Classificação de vendas por consultora" tabindex="0">
       <table class="sales-ranking">
         <colgroup><col class="sales-ranking__seller"><col><col class="sales-ranking__total"><col class="sales-ranking__goal"></colgroup>
-        <thead><tr><th>Vendedora</th><th>Vendas</th><th>Receita</th><th>Meta</th></tr></thead>
+        <thead><tr><th><span class="sales-ranking__heading"><span>Vendedora</span><button type="button" class="ranking-motion-control" id="ranking-motion-control" aria-label="Pausar movimento automático do ranking" aria-pressed="false" hidden>Pausar</button></span></th><th>Vendas</th><th>Receita</th><th>Meta</th></tr></thead>
         <tbody>
           <% dashboard.data.ranking.forEach((row) => { %>
             <tr class="<%= row.position === 1 ? 'sales-ranking__leader' : '' %>">
@@ -172,5 +172,5 @@ const totalSalesLabel = totalSalesLabels[dashboard.range.period] || 'Vendas tota
   </section>
 </section>
 <script src="/assets/js/dashboard-time.js?v=20260729-1" defer></script>
-<script src="/assets/js/dashboard.js?v=20260729-1" defer></script>
+<script src="/assets/js/dashboard.js?v=20261001-2" defer></script>
 <script src="/assets/js/dashboard-auto-period.js?v=20260729-1" defer></script>

@@ -428,21 +428,21 @@
   font-size: 0.72rem;
 }
 .dashboard-showcase__leader > img {
-  object-position: center top;
+  object-fit: contain;
+  object-position: center;
+}
+.dashboard-showcase__leader {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
 }
 .dashboard-showcase__leader::after {
-  content: "";
-  position: absolute;
-  inset: 38% 0 0;
-  background: linear-gradient(transparent, rgba(6, 11, 28, 0.96));
+  content: none;
 }
 .dashboard-showcase__leader > div {
-  position: absolute;
+  position: relative;
   z-index: 2;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  padding: 16px 12px 12px;
+  padding: 8px 12px 10px;
+  background: #091024;
 }
 .dashboard-showcase__leader > div strong,
 .dashboard-showcase__leader > div small {
@@ -1711,8 +1711,7 @@
     height: 100%;
     gap: 8px;
   }
-  .dashboard-showcase__video,
-  .dashboard-showcase__leader > img {
+  .dashboard-showcase__video {
     position: absolute;
     inset: 0;
     width: 100%;

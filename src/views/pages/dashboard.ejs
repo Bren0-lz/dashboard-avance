@@ -16,7 +16,7 @@ const totalSalesLabels = { today: 'Vendas totais do dia', morning: 'Vendas totai
 const totalCardLabel = totalCardLabels[dashboard.range.period] || 'Total do período';
 const totalSalesLabel = totalSalesLabels[dashboard.range.period] || 'Vendas totais do período';
 %>
-<section class="sales-dashboard" aria-label="Dashboard de vendas">
+<section class="sales-dashboard<%= dashboard.data.ranking.length <= 3 ? ' sales-dashboard--compact-ranking' : '' %>" aria-label="Dashboard de vendas">
   <section class="sales-dashboard__top" aria-label="Resumo de vendas">
     <% [[morning, 'Manhã', 'morning', '08:00 - 12:00', dashboard.target?.morning_value], [afternoon, 'Tarde', 'afternoon', '13:30 - 17:30', dashboard.target?.afternoon_value], [dashboard.dailyTotals, totalCardLabel, 'total', totalGoalLabel, dashboard.target?.goal_value]].forEach(([item, label, tone, schedule, goal]) => { %>
       <article class="dashboard-card shift-kpi shift-kpi--<%= tone %>">

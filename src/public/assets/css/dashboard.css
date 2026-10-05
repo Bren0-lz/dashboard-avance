@@ -1946,6 +1946,90 @@
   .dashboard-performance:has(.dashboard-gauge__more[open]) { overflow: visible; }
   .dashboard-gauge__more[open] { position: static; }
 }
+@media (min-width: 1280px) and (min-height: 850px) {
+  .sales-dashboard--compact-ranking {
+    grid-template-rows: 218px max-content minmax(0, 1fr);
+  }
+  .sales-dashboard--compact-ranking .sales-results .ranking-scroll {
+    flex: 0 0 auto;
+    overflow-y: hidden;
+  }
+  .sales-dashboard--compact-ranking .period-countdown,
+  .sales-dashboard--compact-ranking .dashboard-performance {
+    padding: 12px 14px;
+  }
+  .sales-dashboard--compact-ranking .period-countdown .dashboard-card__header h2,
+  .sales-dashboard--compact-ranking .dashboard-performance > h2 {
+    font-size: 1rem;
+  }
+  .sales-dashboard--compact-ranking .period-countdown__box {
+    padding: 14px;
+  }
+  .sales-dashboard--compact-ranking .period-countdown__box strong {
+    font-size: 1rem;
+  }
+  .sales-dashboard--compact-ranking .period-countdown__box b {
+    margin: 10px 0 7px;
+    font-size: 3rem;
+  }
+  .sales-dashboard--compact-ranking .period-countdown__box small {
+    font-size: 0.82rem;
+  }
+  .sales-dashboard--compact-ranking .dashboard-performance__metrics {
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .sales-dashboard--compact-ranking .dashboard-performance__metrics > span {
+    min-height: 70px;
+    padding: 8px 10px;
+  }
+  .sales-dashboard--compact-ranking .dashboard-performance__metrics small {
+    font-size: 0.85rem;
+  }
+  .sales-dashboard--compact-ranking .dashboard-performance__metrics strong {
+    font-size: 1.22rem;
+  }
+  .sales-dashboard--compact-ranking .dashboard-gauges {
+    gap: 8px;
+    margin-top: 9px;
+  }
+  .sales-dashboard--compact-ranking .dashboard-gauge {
+    padding: 10px 12px;
+  }
+  .sales-dashboard--compact-ranking .dashboard-gauge > strong {
+    font-size: 1.15rem;
+  }
+  .sales-dashboard--compact-ranking .dashboard-gauge svg {
+    flex-basis: 96px;
+    width: 96px;
+    height: 54px;
+  }
+  .sales-dashboard--compact-ranking .dashboard-gauge text {
+    font-size: 12px;
+  }
+  .sales-dashboard--compact-ranking .dashboard-gauge__summary small,
+  .sales-dashboard--compact-ranking .dashboard-gauge__more summary {
+    font-size: 0.78rem;
+  }
+  .sales-dashboard--compact-ranking .dashboard-gauge__summary b,
+  .sales-dashboard--compact-ranking .dashboard-gauge__no-target {
+    font-size: 1.05rem;
+  }
+  .sales-dashboard--compact-ranking .dashboard-gauge__no-target {
+    flex: 1;
+    align-items: center;
+  }
+  .sales-dashboard--compact-ranking .dashboard-gauge__empty,
+  .sales-dashboard--compact-ranking .dashboard-gauge__more:not([open]) {
+    position: static;
+    margin-top: 8px;
+    font-size: 0.78rem;
+  }
+  .sales-dashboard--compact-ranking:has(.dashboard-gauge__more[open]) {
+    min-height: calc(100dvh - 78px);
+    grid-template-rows: 218px max-content minmax(max-content, 1fr);
+  }
+}
 @media (min-width: 1280px) and (max-width: 1500px) and (min-height: 700px) {
   .shift-kpi .dashboard-card__header h2 { font-size: 0.75rem; }
   .shift-kpi .dashboard-pill { font-size: 0.53rem; padding-inline: 3px; }

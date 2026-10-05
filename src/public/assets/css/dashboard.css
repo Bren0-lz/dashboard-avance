@@ -1948,72 +1948,72 @@
 }
 @media (min-width: 1280px) and (min-height: 850px) {
   .sales-dashboard--compact-ranking {
-    grid-template-rows: 218px max-content minmax(0, 1fr);
+    height: auto;
+    grid-template-rows: 218px max-content clamp(210px, 25dvh, 240px);
   }
   .sales-dashboard--compact-ranking .sales-results .ranking-scroll {
     flex: 0 0 auto;
-    overflow-y: hidden;
   }
   .sales-dashboard--compact-ranking .period-countdown,
   .sales-dashboard--compact-ranking .dashboard-performance {
-    padding: 12px 14px;
+    padding: 9px 11px;
   }
   .sales-dashboard--compact-ranking .period-countdown .dashboard-card__header h2,
   .sales-dashboard--compact-ranking .dashboard-performance > h2 {
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
   .sales-dashboard--compact-ranking .period-countdown__box {
-    padding: 14px;
+    padding: 8px;
   }
   .sales-dashboard--compact-ranking .period-countdown__box strong {
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
   .sales-dashboard--compact-ranking .period-countdown__box b {
-    margin: 10px 0 7px;
-    font-size: 3rem;
+    margin: 6px 0 4px;
+    font-size: 2.15rem;
   }
   .sales-dashboard--compact-ranking .period-countdown__box small {
-    font-size: 0.82rem;
+    font-size: 0.73rem;
   }
   .sales-dashboard--compact-ranking .dashboard-performance__metrics {
-    gap: 8px;
-    margin-top: 10px;
+    gap: 6px;
+    margin-top: 6px;
   }
   .sales-dashboard--compact-ranking .dashboard-performance__metrics > span {
-    min-height: 70px;
-    padding: 8px 10px;
+    min-height: 48px;
+    padding: 5px 8px;
   }
   .sales-dashboard--compact-ranking .dashboard-performance__metrics small {
-    font-size: 0.85rem;
+    font-size: 0.72rem;
   }
   .sales-dashboard--compact-ranking .dashboard-performance__metrics strong {
-    font-size: 1.22rem;
+    font-size: 1rem;
   }
   .sales-dashboard--compact-ranking .dashboard-gauges {
-    gap: 8px;
-    margin-top: 9px;
+    gap: 6px;
+    margin-top: 6px;
   }
   .sales-dashboard--compact-ranking .dashboard-gauge {
-    padding: 10px 12px;
+    padding: 7px 9px;
   }
   .sales-dashboard--compact-ranking .dashboard-gauge > strong {
-    font-size: 1.15rem;
+    font-size: 0.93rem;
   }
   .sales-dashboard--compact-ranking .dashboard-gauge svg {
-    flex-basis: 96px;
-    width: 96px;
-    height: 54px;
+    flex-basis: 80px;
+    width: 80px;
+    height: 45px;
   }
   .sales-dashboard--compact-ranking .dashboard-gauge text {
-    font-size: 12px;
+    font-size: 14px;
   }
   .sales-dashboard--compact-ranking .dashboard-gauge__summary small,
   .sales-dashboard--compact-ranking .dashboard-gauge__more summary {
-    font-size: 0.78rem;
+    font-size: 0.7rem;
   }
   .sales-dashboard--compact-ranking .dashboard-gauge__summary b,
   .sales-dashboard--compact-ranking .dashboard-gauge__no-target {
-    font-size: 1.05rem;
+    font-size: 0.82rem;
   }
   .sales-dashboard--compact-ranking .dashboard-gauge__no-target {
     flex: 1;
@@ -2022,12 +2022,8 @@
   .sales-dashboard--compact-ranking .dashboard-gauge__empty,
   .sales-dashboard--compact-ranking .dashboard-gauge__more:not([open]) {
     position: static;
-    margin-top: 8px;
-    font-size: 0.78rem;
-  }
-  .sales-dashboard--compact-ranking:has(.dashboard-gauge__more[open]) {
-    min-height: calc(100dvh - 78px);
-    grid-template-rows: 218px max-content minmax(max-content, 1fr);
+    margin-top: 5px;
+    font-size: 0.7rem;
   }
 }
 @media (min-width: 1280px) and (max-width: 1500px) and (min-height: 700px) {

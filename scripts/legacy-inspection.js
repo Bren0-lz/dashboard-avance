@@ -43,5 +43,5 @@ function enrichSalesInspection(
           .get().count,
       );
   }
-}
+}   
 module.exports = { enrichSalesInspection };

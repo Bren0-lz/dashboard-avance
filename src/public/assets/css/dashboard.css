@@ -1948,8 +1948,12 @@
 }
 @media (min-width: 1280px) and (min-height: 850px) {
   .sales-dashboard--compact-ranking {
-    height: auto;
-    grid-template-rows: 218px max-content clamp(210px, 25dvh, 240px);
+    height: 100%;
+    grid-template-rows: 218px max-content minmax(0, 1fr);
+  }
+  .sales-dashboard--compact-ranking .sales-dashboard__bottom {
+    align-self: end;
+    height: clamp(210px, 25dvh, 240px);
   }
   .sales-dashboard--compact-ranking .sales-results .ranking-scroll {
     flex: 0 0 auto;
@@ -2024,6 +2028,14 @@
     position: static;
     margin-top: 5px;
     font-size: 0.7rem;
+  }
+  .sales-dashboard--compact-ranking:has(.dashboard-gauge__more[open]) {
+    min-height: calc(100dvh - 78px);
+    grid-template-rows: 218px max-content minmax(max-content, 1fr);
+  }
+  .sales-dashboard--compact-ranking .sales-dashboard__bottom:has(.dashboard-gauge__more[open]) {
+    height: auto;
+    min-height: clamp(210px, 25dvh, 240px);
   }
 }
 @media (min-width: 1280px) and (max-width: 1500px) and (min-height: 700px) {

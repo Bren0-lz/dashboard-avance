@@ -33,9 +33,10 @@ const totalSalesLabel = totalSalesLabels[dashboard.range.period] || 'Vendas tota
     <article class="dashboard-card revenue-goals">
       <header class="dashboard-card__header"><h2>Receita válida por categoria</h2></header>
       <div class="revenue-goals__list">
-        <% [['portability_base', 'Portabilidade / Base'], ['portability_out', 'Portabilidade / Fora da base'], ['new_base', 'Novo / Base'], ['new_out', 'Novo / Fora da base']].forEach(([key, label]) => { %>
+        <% let categoriesTotal = 0; [['portability_base', 'Portabilidade / Base'], ['portability_out', 'Portabilidade / Fora da base'], ['new_base', 'Novo / Base'], ['new_out', 'Novo / Fora da base']].forEach(([key, label]) => { categoriesTotal += Number(dashboard.data.categories[key]) || 0; %>
           <div><span><%= label %></span><strong><%= brl(dashboard.data.categories[key]) %></strong></div>
         <% }) %>
+        <div class="revenue-goals__total"><span>Total</span><strong><%= brl(categoriesTotal) %></strong></div>
       </div>
     </article>
 

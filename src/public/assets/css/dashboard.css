@@ -273,6 +273,21 @@
   color: #facc15;
   font-style: normal;
 }
+.revenue-goals__list > .revenue-goals__total {
+  margin-top: 4px;
+  border-color: rgba(96, 165, 250, 0.45);
+  background: rgba(96, 165, 250, 0.14);
+}
+.revenue-goals .revenue-goals__list > .revenue-goals__total span {
+  color: #fff;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.revenue-goals .revenue-goals__list > .revenue-goals__total strong {
+  color: #93c5fd;
+  font-size: 0.9rem;
+}
 .operator-card {
   grid-column: span 3;
   min-height: 295px;
@@ -428,21 +443,24 @@
   font-size: 0.72rem;
 }
 .dashboard-showcase__leader > img {
+  position: absolute;
+  inset: 0;
   object-fit: cover;
   object-position: center top;
 }
-.dashboard-showcase__leader {
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-}
 .dashboard-showcase__leader::after {
-  content: none;
+  content: "";
+  position: absolute;
+  inset: 38% 0 0;
+  background: linear-gradient(transparent, rgba(6, 11, 28, 0.8));
 }
 .dashboard-showcase__leader > div {
-  position: relative;
+  position: absolute;
   z-index: 2;
-  padding: 8px 12px 10px;
-  background: #091024;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 16px 12px 12px;
 }
 .dashboard-showcase__leader > div strong,
 .dashboard-showcase__leader > div small {

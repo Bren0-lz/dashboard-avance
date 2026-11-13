@@ -1,6 +1,39 @@
 # Dashboard Avance
 
+![Node.js](https://img.shields.io/badge/Node.js%2024-Express%205-339933?logo=nodedotjs&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL%208-Knex-4479A1?logo=mysql&logoColor=white)
+![EJS](https://img.shields.io/badge/EJS-SSR-B4CA65)
+![CI](https://img.shields.io/badge/CI-GitHub%20Actions%20%2B%20MySQL%208.4-2088FF?logo=githubactions&logoColor=white)
+![Licença](https://img.shields.io/badge/Licen%C3%A7a-Todos%20os%20direitos%20reservados-red)
+
 Monólito Node.js 24 / Express 5 / EJS para gestão de vendas, metas e indicadores. Páginas SSR, API `/api/v1`, autenticação, mídia, Excel e eventos SSE são servidos pelo mesmo processo e pelo mesmo deploy. O banco é MySQL via uma única instância Knex.
+
+---
+
+## Comprovação de experiência
+
+| | |
+|---|---|
+| **Desenvolvedor principal** | Breno Luiz Silva do Carmo — autor de 45 dos 65 commits (69 %) |
+| **Colaboração** | Árlisson Alves — 20 commits |
+| **Tipo** | Sistema comercial desenvolvido para a operação de vendas da Avance, de propriedade do autor |
+| **Período de desenvolvimento** | 22/07/2026 a 05/10/2026 |
+| **Verificação** | `npm ci && npm run test:run` (89 testes; os 2 de integração com MySQL real rodam com `TEST_MYSQL=1`) e `npm run build` (verificação de deploy) |
+
+### Competências técnicas evidenciadas
+
+| Competência | Onde verificar neste repositório |
+|---|---|
+| **Banco de dados** | MySQL 8 via Knex: migrations em [`src/database/migrations/`](src/database/migrations/), seeds idempotentes, sessões no próprio banco, dinheiro em `DECIMAL(14,2)` com `decimal.js`, exclusão lógica auditada; migração SQLite → MySQL idempotente e com *dry-run* em [`scripts/migrate-legacy-sqlite.js`](scripts/migrate-legacy-sqlite.js) |
+| **Testes automatizados** | [`tests/`](tests/) — 25 arquivos de testes unitários e de integração (`node:test` + Supertest) cobrindo regras de metas, ranking, timezone, CNPJ, dinheiro, Excel, SSE e segurança |
+| **CI/CD** | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — roda a suíte em Linux com MySQL 8.4 real; [`scripts/verify-deploy.js`](scripts/verify-deploy.js) valida JS/EJS, CSP e artefatos proibidos antes do deploy |
+| **Back-end / APIs** | Express 5 modular ([`src/modules/`](src/modules/)): API REST `/api/v1` paginada com erros padronizados, eventos em tempo real por SSE, API de integração com chave Bearer e idempotência por `external_sale_id` (consumida pelo [CRM Avance](https://github.com/danielfreitas2026/crm-avance)) |
+| **Outros frameworks de desenvolvimento web** | EJS (renderização no servidor), Zod (validação), Pino (logs), Luxon (datas e fuso), ExcelJS (importação e exportação) |
+| **Segurança** | Sessão com cookie `HttpOnly`/`Secure`, CSRF, Helmet/CSP sem fontes externas, rate limit, RBAC (`admin`/`operator`/`viewer`), validação de uploads por *magic bytes* |
+| **Design e prototipagem de interfaces** | Dashboard com tema escuro e telas administrativas responsivas, validadas em cinco resoluções — ver *Decisões de interface* e [`GUIA_VISUAL_CSS.md`](GUIA_VISUAL_CSS.md) |
+| **GitHub / versionamento** | 65 commits; plano de recriação e deploy documentado em [`RECRIACAO_HOSTINGER.md`](RECRIACAO_HOSTINGER.md) |
+
+---
 
 ## Arquitetura
 
@@ -172,7 +205,7 @@ Rollback de aplicação: redeploy do release anterior. Migrations seguem expand/
 - [ ] Banco e usuário de produção criados com privilégio mínimo.
 - [ ] Backup SQLite/uploads e checksums guardados fora do Git.
 - [ ] Dry-run legado sem divergência crítica e exceções aprovadas.
-- [x] `npm ci`, `npm run build` e `npm run test:run` verdes localmente (integra��o MySQL preparada no CI).
+- [x] `npm ci`, `npm run build` e `npm run test:run` verdes localmente (integração MySQL preparada no CI).
 - [ ] Migrations/seed executados duas vezes sem perda de dados.
 - [ ] Bootstrap admin removido após primeiro login.
 - [ ] Sistema antigo em somente leitura; snapshot final concluído.
@@ -194,3 +227,15 @@ Rollback de aplicação: redeploy do release anterior. Migrations seguem expand/
 - O código imutável de serviços, operadoras e tipos de venda é gerado no backend a partir do nome. Ele não aparece no formulário, conforme a composição visual de referência, e não depende de JavaScript.
 - Vendas mantêm o tipo de venda no formulário e nas regras, mas a coluna foi omitida da listagem visual conforme o guia. Tabelas largas rolam apenas dentro do próprio contêiner.
 - A validação visual cobre 1920×1080, 1440×900, 1024×768, 768×1024 e 390×844, além dos limites 1500, 1200, 1100, 900, 720 e 700 px. Artefatos locais ficam em `tmp/visual-validation/` e não devem ser versionados.
+
+## Autor
+
+**Breno Luiz Silva do Carmo**
+[LinkedIn](https://www.linkedin.com/in/breno-luiz-silva-do-carmo-19451a243/) ·
+[GitHub](https://github.com/Bren0-lz)
+
+## Licença
+
+Copyright (c) 2026 Breno Luiz Silva do Carmo. Todos os direitos reservados.
+Nenhuma parte deste código pode ser utilizada, reproduzida, distribuída ou modificada sem
+autorização prévia por escrito do autor. Veja [LICENSE](LICENSE).

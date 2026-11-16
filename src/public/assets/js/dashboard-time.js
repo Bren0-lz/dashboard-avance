@@ -8,7 +8,7 @@
   function businessPhaseAt(secondsToday) {
     if (secondsToday < 8 * 3600) return "neutral";
     if (secondsToday < 12 * 3600) return "morning";
-    if (secondsToday < 13.5 * 3600) return "lunch";
+    if (secondsToday < 13 * 3600) return "lunch";
     if (secondsToday < 17.5 * 3600) return "afternoon";
     return "closed";
   }

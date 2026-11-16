@@ -7,9 +7,9 @@ const {
   shouldApplyAfternoon,
 } = require("../../src/public/assets/js/dashboard-time");
 
-test("13:30 encerra o almoço e inicia a tarde", () => {
-  assert.equal(businessPhaseAt(13 * 3600 + 29 * 60 + 59), "lunch");
-  assert.equal(businessPhaseAt(13 * 3600 + 30 * 60), "afternoon");
+test("13:00 encerra o almoço e inicia a atualização para a tarde", () => {
+  assert.equal(businessPhaseAt(12 * 3600 + 59 * 60 + 59), "lunch");
+  assert.equal(businessPhaseAt(13 * 3600), "afternoon");
 });
 
 test("fim do almoço troca hoje por tarde automaticamente", () => {

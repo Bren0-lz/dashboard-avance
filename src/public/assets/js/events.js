@@ -166,13 +166,16 @@ if (userId) {
     if (!audioContext) audioContext = new AudioContext();
     unlockPromise = (async () => {
       try {
-        await audioContext.resume();
+        await Promise.race([
+          audioContext.resume(),
+          new Promise((resolve) => window.setTimeout(resolve, 400)),
+        ]);
         soundsEnabled = audioContext.state === "running";
         if (soundsEnabled) {
           localStorage.setItem(enabledKey, "1");
           preloadSounds();
         }
-        setSoundControl(soundsEnabled);
+        setSoundControl(soundsEnabled || localStorage.getItem(enabledKey) === "1");
         return soundsEnabled;
       } catch {
         soundsEnabled = false;
@@ -469,6 +472,7 @@ if (userId) {
           claimingAudioLeadership = false;
           if (!lock) return undefined;
           isAudioLeader = true;
+          playHalfHourReminder();
           return new Promise((resolve) =>
             window.addEventListener("pagehide", resolve, { once: true }),
           );
@@ -547,13 +551,14 @@ if (userId) {
   };
 
   const activateSounds = async () => {
-    if (await unlockAudio()) {
+    await unlockAudio();
+    if (soundsEnabled || localStorage.getItem(enabledKey) === "1") {
       drainPendingDashboardSounds();
       playHalfHourReminder();
     }
   };
 
-  setSoundControl(false);
+  setSoundControl(localStorage.getItem(enabledKey) === "1");
   document.addEventListener("pointerdown", activateSounds, { once: true });
   document.addEventListener("keydown", activateSounds, { once: true });
   soundControl?.addEventListener("click", activateSounds);
@@ -573,7 +578,12 @@ if (userId) {
   };
 
   async function playHalfHourReminder() {
-    if (!isDashboard || !isAudioLeader || !soundsEnabled) return;
+    if (
+      !isDashboard ||
+      !isAudioLeader ||
+      (!soundsEnabled && localStorage.getItem(enabledKey) !== "1")
+    )
+      return;
     const time = localBusinessTime();
     const hour = Number(time.hour);
     const minute = Number(time.minute);
